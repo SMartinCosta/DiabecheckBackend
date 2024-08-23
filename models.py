@@ -1,63 +1,81 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime, Enum, ForeignKey, Date
+from sqlalchemy import Column, Integer, String, Float, DateTime, Enum, ForeignKey, Date, null
 from sqlalchemy.orm import relationship
 import database
 from database import Base
 import enum
 
-class Medicion(Base):
-    __tablename__ = 'mediciones'
-
-    id = Column(Integer, primary_key=True, index=True)
-    fecha = Column(DateTime, nullable=False)
-    glucosa = Column(Float, nullable=True)
-    insulina = Column(Float, nullable=True)
-    carbohidratos = Column(Float, nullable=True)
-    idPaciente = Column(Integer, ForeignKey('pacientes.id')) 
-
-    paciente = relationship("Paciente", back_populates="mediciones")
-
-class UserRole(str, enum.Enum):
-    medico = "medico"
-    paciente = "paciente"
-
 class User(Base):
-    __tablename__ = "users"
+    __tablename__ = "usuarios"
     
-    id = Column(Integer, primary_key=True, index=True)
-    email = Column(String, unique=True, index=True)
-    password = Column(String)
-    role = Column(Enum(UserRole))
+    IdUsuario = Column(Integer, primary_key=True, index=True)
+    Nombre = Column(String)
+    Apellido = Column(String)
+    NroDocumento = Column(String, unique=True, index=True)
+    email = Column(String, unique=True)
+    FechaNacimiento = Column(String)
+    RutaFoto = Column(String, unique=True)
+    IdRol = Column(Integer, ForeignKey('roles.IdRol'))
     
-    medico = relationship("Medico", back_populates="user", uselist=False)
-    paciente = relationship("Paciente", back_populates="user", uselist=False)
+    medicoInfoAdicional = relationship("MedicosInfoAdicional")
+    pacienteInfoAdicional = relationship("PacientesInfoAdicional")
+    rol = relationship("Rol")
+   
+class Rol(Base):
+    __tablename__= "roles"
+    IdRol = Column(Integer, primary_key=True, index=True)
+    Descripcion = Column(String)
+    
+class CoberturaMedica(Base):
+    __tablename__= "coberturamedica"
+    IdCoberturaMedica = Column(Integer, primary_key=True, index=True)
+    Descripcion = Column(String)
+   
+class Diagnostico(Base):
+    __tablename__= "diagnosticos"
+    IdDiagnostico = Column(Integer, primary_key=True, index=True)
+    Descripcion = Column(String)
+    
+class Matricula(Base):
+    __tablename__= "matriculas"
+    IdMatricula = Column(Integer, primary_key=True, index=True)
+    NumeroMatricula = Column(String)
+    NroDocumento = Column(String)
+    
+class MedicosInfoAdicional(Base):
+    __tablename__="medicosinfoadicional"
+    IdMedicoInfoAdicional = Column(Integer, primary_key=True, index=True)
+    IdUsuario = Column(Integer, ForeignKey('usuarios.IdUsuario'))
+    Especialidad = Column(String)
+    IdMatricula = Column(Integer, ForeignKey('matriculas.IdMatricula'))
 
-class Medico(Base):
-    __tablename__ = 'medicos'
+    matricula = relationship("Matricula")
+    
+class PacientesInfoAdicional(Base):
+    __tablename__ = "pacientesInfoAdicional"
+    IdPacientesInfoAdicional = Column(Integer, primary_key=True, index=True)
+    IdUsuario = Column(Integer, ForeignKey('usuarios.IdUsuario'))
+    IdCoberturaMedica = Column(Integer, ForeignKey('coberturamedica.IdCoberturaMedica'))
+    IdDiagnostico = Column(Integer, ForeignKey('diagnosticos.IdDiagnostico'))
+    Peso = Column(Integer)
+    Altura = Column(Integer)
+    FechaUltimaConsulta = Column(DateTime)
+    
+    cobertura = relationship("CoberturaMedica")
+    diagnostico = relationship("Diagnostico")
 
-    id = Column(Integer, primary_key=True, index=True)
-    nombre = Column(String)
-    apellido = Column(String)
-    idPaciente = Column(Integer, ForeignKey('paciente.id'))
-    idUser = Column(Integer, ForeignKey('users.id'))
-
-    user = relationship("User", back_populates="medico")
-    pacientes = relationship("Paciente", back_populates="medico")
-
-class Paciente(Base):
-    __tablename__ = 'pacientes'
-
-    id = Column(Integer, primary_key=True, index=True)
-    nombre = Column(String)
-    apellido = Column(String)
-    documento = Column(Integer)
-    fechaNacimiento = Column(Date)
-    peso = Column(Integer)
-    altura = Column(Integer)
-    diagnostico = Column(String)
-    coberturaMedica = Column(String)
-    idMedico = Column(Integer, ForeignKey('medicos.id'))
-    idUser = Column(Integer, ForeignKey('users.id'))
-
-    medico = relationship("Medico", back_populates="pacientes")
-    user = relationship("User", back_populates="paciente")
-    mediciones = relationship("Medicion", back_populates="paciente")
+class Conexiones(Base):
+    __tablename__ = "conexionesmedicopaciente"
+    IdConexionMedicoPaciente = Column(Integer, primary_key=True, index=True)
+    IdMedico = Column(Integer, ForeignKey('usuarios.IdUsuario'))
+    IdPaciente = Column(Integer, ForeignKey('usuarios.IdUsuario'))
+    #medico = relationship("User")
+    #paciente = relationship("User")
+    
+class Mediciones(Base):
+    __tablename__ ="mediciones"
+    IdMedicion = Column(Integer, primary_key=True, index=True)
+    IdPaciente = Column(Integer, ForeignKey('usuarios.IdUsuario'))
+    Fecha = Column(DateTime)
+    Glucosa = Column(Integer)
+    Insulina = Column(Integer)
+    Carbohidratos = Column(Integer)

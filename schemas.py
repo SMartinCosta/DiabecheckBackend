@@ -14,8 +14,8 @@ class MedicionCreate(BaseModel):
 class Medicion(MedicionCreate):
     id: int
 
-    class Config:
-        orm_mode = True
+class Config:
+    orm_mode = True
 
 class UserRole(str, Enum):
     medico = "medico"
