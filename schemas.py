@@ -5,14 +5,14 @@ from typing import List
 from typing import Optional
 
 class MedicionCreate(BaseModel):
-    fecha: datetime
-    glucosa: Optional[float] = None
-    insulina: Optional[float] = None
-    carbohidratos: Optional[float] = None
-    idPaciente: int
+    Fecha: datetime
+    Glucosa: Optional[float] = None
+    Insulina: Optional[float] = None
+    Carbohidratos: Optional[float] = None
+    IdPaciente: int
 
-class Medicion(MedicionCreate):
-    id: int
+class Mediciones(MedicionCreate):
+    IdMedicion: int
 
 class Config:
     orm_mode = True

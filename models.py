@@ -68,8 +68,8 @@ class Conexiones(Base):
     IdConexionMedicoPaciente = Column(Integer, primary_key=True, index=True)
     IdMedico = Column(Integer, ForeignKey('usuarios.IdUsuario'))
     IdPaciente = Column(Integer, ForeignKey('usuarios.IdUsuario'))
-    #medico = relationship("User")
-    #paciente = relationship("User")
+    # medico = relationship("User")
+    # paciente = relationship("User")
     
 class Mediciones(Base):
     __tablename__ ="mediciones"
