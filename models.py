@@ -68,6 +68,7 @@ class Conexiones(Base):
     IdConexionMedicoPaciente = Column(Integer, primary_key=True, index=True)
     IdMedico = Column(Integer, ForeignKey('usuarios.IdUsuario'))
     IdPaciente = Column(Integer, ForeignKey('usuarios.IdUsuario'))
+    estado = Column(String, default="pendiente") 
     # medico = relationship("User")
     # paciente = relationship("User")
     
