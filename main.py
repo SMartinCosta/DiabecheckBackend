@@ -4,7 +4,6 @@ from pydantic import BaseModel
 from datetime import datetime
 from sqlalchemy.orm import Session
 from sqlalchemy import text
-from cryptography import *
 import models
 import database
 import schemas
@@ -182,7 +181,8 @@ async def crear_solicitud_medico(solicitud: SolicitudMedicoRequest, db: Session 
     # Verificar si ya existe una solicitud o conexión
     conexion_existente = db.query(models.Conexiones).filter(
         models.Conexiones.IdMedico == result_list.get('IdUsuario'),
-        models.Conexiones.IdPaciente == paciente_id
+        models.Conexiones.IdPaciente == paciente_id,
+        models.Conexiones.estado == "aceptada"
     ).first()
 
     if conexion_existente:
@@ -201,20 +201,60 @@ async def crear_solicitud_medico(solicitud: SolicitudMedicoRequest, db: Session 
     return {"msg": "Solicitud enviada con éxito", "conexion": nueva_conexion}
 
 
-@app.put("/solicitud-medico/{conexion_id}/")
-async def gestionar_solicitud(conexion_id: int, aceptar: bool, db: Session = Depends(get_db)):
-    conexion = db.query(models.Conexiones).filter(models.Conexiones.IdConexionMedicoPaciente == conexion_id).first()
+#obtener las solicitudes de un medico
+@app.get("/medico/solicitudes/{medico_id}/")
+async def get_solicitudes(medico_id: int, db: Session = Depends(get_db)): 
+    stmt = text('CALL `diabecheckv2`.`GetSolicitudesByMedico`(:medico_id)')
+    result = db.execute(stmt, {"medico_id": medico_id})
+    solicitudes = result.fetchall()
+    
+    if not solicitudes:
+        raise HTTPException(status_code=404, detail="No solicitudes found for this medico")
+    result_list = [dict(row._mapping) for row in solicitudes]
+  
+    return result_list
 
-    if not conexion:
+@app.post("/medico/solicitudes/aceptar/{id_solicitud}/")
+async def aceptar_solicitud(id_solicitud: int, db: Session = Depends(get_db)):
+    solicitud = db.query(models.Conexiones).filter(models.Conexiones.IdConexionMedicoPaciente == id_solicitud).first()
+
+    if not solicitud:
         raise HTTPException(status_code=404, detail="Solicitud no encontrada")
 
-    # Actualizar estado según la decisión del médico
-    conexion.estado = "aceptada" if aceptar else "rechazada"
+    if solicitud.estado != "pendiente":
+        raise HTTPException(status_code=400, detail="La solicitud ya fue procesada")
+
+    solicitud.estado = "aceptada"
     db.commit()
-    db.refresh(conexion)
 
-    return {"msg": "Solicitud gestionada", "estado": conexion.estado}
+    return {"msg": "Solicitud aceptada exitosamente"}
 
+@app.post("/medico/solicitudes/rechazar/{id_solicitud}/")
+async def rechazar_solicitud(id_solicitud: int, db: Session = Depends(get_db)):
+    solicitud = db.query(models.Conexiones).filter(models.Conexiones.IdConexionMedicoPaciente == id_solicitud).first()
+
+    if not solicitud:
+        raise HTTPException(status_code=404, detail="Solicitud no encontrada")
+
+    if solicitud.estado != "pendiente":
+        raise HTTPException(status_code=400, detail="La solicitud ya fue procesada")
+
+    # Actualizar estado a "rechazada"
+    solicitud.estado = "rechazada"
+    db.commit()
+
+    return {"msg": "Solicitud rechazada exitosamente"}
+
+@app.get("/buscar_medico/{matricula}/")
+async def get_medico_for_patients(matricula: int, db: Session = Depends(get_db)):
+    stmt = text('CALL GetMedicoByMatricula(:matricula)')
+    result = db.execute(stmt, {"matricula": matricula})
+    medicos = result.fetchall()
+    if not medicos:
+        raise HTTPException(status_code=404, detail="No medico found for this patient")
+    result_list = [dict(row._mapping) for row in medicos]
+  
+    return result_list
 
 
 def activate(self, db: Session = Depends(get_db)):
