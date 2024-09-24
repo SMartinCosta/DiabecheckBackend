@@ -1,8 +1,8 @@
--- MySQL dump 10.13  Distrib 8.0.38, for Win64 (x86_64)
+-- MySQL dump 10.13  Distrib 8.0.38, for macos14 (arm64)
 --
 -- Host: localhost    Database: diabecheckv2
 -- ------------------------------------------------------
--- Server version	8.0.39
+-- Server version	8.0.36
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -38,7 +38,7 @@ CREATE TABLE `coberturamedica` (
 
 LOCK TABLES `coberturamedica` WRITE;
 /*!40000 ALTER TABLE `coberturamedica` DISABLE KEYS */;
-INSERT INTO `coberturamedica` (`IdCoberturaMedica`, `Descripcion`, `Activo`, `InsDate`, `UpdDate`) VALUES (1,'Osde',1,'2024-08-22 20:53:16','2024-08-22 20:53:16'),(2,'Medife',1,'2024-08-22 20:53:20','2024-08-22 20:53:20'),(3,'Swiss Medical',1,'2024-08-22 20:53:26','2024-08-22 20:53:26');
+INSERT INTO `coberturamedica` VALUES (1,'Osde',1,'2024-08-22 20:53:16','2024-08-22 20:53:16'),(2,'Medife',1,'2024-08-22 20:53:20','2024-08-22 20:53:20'),(3,'Swiss Medical',1,'2024-08-22 20:53:26','2024-08-22 20:53:26');
 /*!40000 ALTER TABLE `coberturamedica` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -56,12 +56,11 @@ CREATE TABLE `conexionesmedicopaciente` (
   `Activo` int NOT NULL DEFAULT '1',
   `InsDate` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `UpdDate` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `estado` varchar(45) NOT NULL,
   PRIMARY KEY (`IdConexionMedicoPaciente`),
-  KEY `FK_ConexionMedicoPaciente_Medico` (`IdMedico`),
-  KEY `FK_ConexionMedicoPaciente_Paciente` (`IdPaciente`),
-  CONSTRAINT `FK_ConexionesMedicoPaciente` FOREIGN KEY (`IdMedico`) REFERENCES `usuarios` (`IdUsuario`),
-  CONSTRAINT `FK_ConexionesMedicoPaciente_2` FOREIGN KEY (`IdPaciente`) REFERENCES `usuarios` (`IdUsuario`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  KEY `FK_ConexionesMedicoPaciente_idx` (`IdMedico`),
+  KEY `FK_ConexionesMedicoPaciente_2_idx` (`IdPaciente`)
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -70,7 +69,7 @@ CREATE TABLE `conexionesmedicopaciente` (
 
 LOCK TABLES `conexionesmedicopaciente` WRITE;
 /*!40000 ALTER TABLE `conexionesmedicopaciente` DISABLE KEYS */;
-INSERT INTO `conexionesmedicopaciente` (`IdConexionMedicoPaciente`, `IdMedico`, `IdPaciente`, `Activo`, `InsDate`, `UpdDate`) VALUES (1,3,2,1,'2024-08-22 20:56:09','2024-08-22 20:56:09'),(2,3,4,1,'2024-09-03 21:35:05','2024-09-03 21:35:05'),(3,3,6,1,'2024-09-03 21:35:05','2024-09-03 21:35:05'),(4,3,7,1,'2024-09-03 21:35:05','2024-09-03 21:35:05'),(5,5,8,1,'2024-09-03 21:35:05','2024-09-03 21:35:05'),(6,5,2,1,'2024-09-03 21:35:05','2024-09-03 21:35:05'),(7,9,6,1,'2024-09-03 21:35:05','2024-09-03 21:35:05'),(8,9,4,1,'2024-09-03 21:35:05','2024-09-03 21:35:05');
+INSERT INTO `conexionesmedicopaciente` VALUES (1,3,2,1,'2024-08-22 20:56:09','2024-08-22 20:56:09','aceptada'),(2,3,4,1,'2024-09-03 21:35:05','2024-09-03 21:35:05','aceptada'),(3,3,6,1,'2024-09-03 21:35:05','2024-09-03 21:35:05','aceptada'),(4,3,7,1,'2024-09-03 21:35:05','2024-09-03 21:35:05','aceptada'),(5,5,8,1,'2024-09-03 21:35:05','2024-09-03 21:35:05','aceptada'),(6,5,2,1,'2024-09-03 21:35:05','2024-09-03 21:35:05','aceptada'),(7,9,6,1,'2024-09-03 21:35:05','2024-09-03 21:35:05','aceptada'),(8,9,4,1,'2024-09-03 21:35:05','2024-09-03 21:35:05','aceptada'),(9,3,1,1,'2024-09-23 17:12:13','2024-09-23 17:12:13','pendiente'),(10,9,2,1,'2024-09-23 17:39:52','2024-09-23 17:39:52','pendiente');
 /*!40000 ALTER TABLE `conexionesmedicopaciente` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -97,7 +96,7 @@ CREATE TABLE `diagnosticos` (
 
 LOCK TABLES `diagnosticos` WRITE;
 /*!40000 ALTER TABLE `diagnosticos` DISABLE KEYS */;
-INSERT INTO `diagnosticos` (`IdDiagnostico`, `Descripcion`, `Activo`, `InsDate`, `UpdDate`) VALUES (1,'Tipo 1',1,'2024-08-22 20:51:12','2024-08-22 20:51:12'),(2,'Tipo 2',1,'2024-08-22 20:51:17','2024-08-22 20:51:17'),(3,'Pre Diabetes',1,'2024-08-22 20:51:29','2024-08-22 20:51:29'),(4,'Gestacional',1,'2024-08-22 20:51:35','2024-08-22 20:51:35');
+INSERT INTO `diagnosticos` VALUES (1,'Tipo 1',1,'2024-08-22 20:51:12','2024-08-22 20:51:12'),(2,'Tipo 2',1,'2024-08-22 20:51:17','2024-08-22 20:51:17'),(3,'Pre Diabetes',1,'2024-08-22 20:51:29','2024-08-22 20:51:29'),(4,'Gestacional',1,'2024-08-22 20:51:35','2024-08-22 20:51:35');
 /*!40000 ALTER TABLE `diagnosticos` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -125,7 +124,7 @@ CREATE TABLE `matriculas` (
 
 LOCK TABLES `matriculas` WRITE;
 /*!40000 ALTER TABLE `matriculas` DISABLE KEYS */;
-INSERT INTO `matriculas` (`IdMatricula`, `NumeroMatricula`, `NroDocumento`, `Activo`, `InsDate`, `UpdDate`) VALUES (1,'1','0000002',1,'2024-08-22 20:48:38','2024-08-22 20:48:38'),(2,'2','0000004',1,'2024-09-03 21:30:03','2024-09-03 21:30:03'),(3,'3','0000008',1,'2024-09-03 21:30:03','2024-09-03 21:30:03');
+INSERT INTO `matriculas` VALUES (1,'1','0000002',1,'2024-08-22 20:48:38','2024-08-22 20:48:38'),(2,'2','0000004',1,'2024-09-03 21:30:03','2024-09-03 21:30:03'),(3,'3','0000008',1,'2024-09-03 21:30:03','2024-09-03 21:30:03');
 /*!40000 ALTER TABLE `matriculas` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -147,9 +146,9 @@ CREATE TABLE `mediciones` (
   `InsDate` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `UpdDate` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`IdMedicion`),
-  KEY `fk_paciente` (`IdPaciente`),
-  CONSTRAINT `FK_Mediciones` FOREIGN KEY (`IdPaciente`) REFERENCES `usuarios` (`IdUsuario`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  KEY `FK_Mediciones_idx` (`IdPaciente`),
+  CONSTRAINT `FK_Mediciones` FOREIGN KEY (`IdPaciente`) REFERENCES `pacientesinfoadicional` (`IdPacientesInfoAdicional`)
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -158,7 +157,7 @@ CREATE TABLE `mediciones` (
 
 LOCK TABLES `mediciones` WRITE;
 /*!40000 ALTER TABLE `mediciones` DISABLE KEYS */;
-INSERT INTO `mediciones` (`IdMedicion`, `IdPaciente`, `Fecha`, `Glucosa`, `Insulina`, `Carbohidratos`, `Activo`, `InsDate`, `UpdDate`) VALUES (1,1,'2024-08-27 00:00:00',120.5,30,50,1,'2024-08-27 15:11:43','2024-08-27 15:11:43'),(2,1,'2024-08-27 00:00:00',120.5,30,50,1,'2024-08-27 15:13:24','2024-08-27 15:13:24'),(3,1,'2024-08-27 00:00:00',120.5,30,50,1,'2024-08-27 15:15:45','2024-08-27 15:15:45'),(4,1,'2024-08-27 00:00:00',120.5,30,50,1,'2024-09-01 21:50:48','2024-09-01 21:50:48'),(5,2,'2024-09-02 00:49:17',120,6,120,1,'2024-09-01 21:53:21','2024-09-01 21:53:21');
+INSERT INTO `mediciones` VALUES (1,1,'2024-08-27 00:00:00',120.5,30,50,1,'2024-08-27 15:11:43','2024-08-27 15:11:43'),(2,1,'2024-08-27 00:00:00',120.5,30,50,1,'2024-08-27 15:13:24','2024-08-27 15:13:24'),(3,1,'2024-08-27 00:00:00',120.5,30,50,1,'2024-08-27 15:15:45','2024-08-27 15:15:45'),(4,1,'2024-08-27 00:00:00',120.5,30,50,1,'2024-09-01 21:50:48','2024-09-01 21:50:48'),(5,2,'2024-09-02 00:49:17',120,6,120.1,1,'2024-09-01 21:53:21','2024-09-01 21:53:21'),(6,1,'2024-10-01 00:00:01',121,6,120,1,'2024-09-18 15:55:52','2024-09-18 15:55:52'),(7,1,'2024-08-13 12:00:00',117,5,123,1,'2024-09-18 19:14:18','2024-09-18 19:14:18'),(8,2,'2024-09-19 21:21:29',120,5,100,1,'2024-09-19 18:30:54','2024-09-19 18:30:54'),(9,2,'2024-09-19 23:21:00',100,NULL,NULL,1,'2024-09-19 18:33:17','2024-09-19 18:33:17'),(10,1,'2024-09-20 18:09:41',100,5,101,1,'2024-09-20 15:11:19','2024-09-20 15:11:19'),(11,1,'2024-09-20 18:09:41',100,7,122,1,'2024-09-20 15:13:49','2024-09-20 15:13:49'),(12,1,'2024-09-20 18:09:41',100,8,100,1,'2024-09-20 15:14:25','2024-09-20 15:14:25'),(13,1,'2024-09-20 18:17:23',111,5,111,1,'2024-09-20 15:18:21','2024-09-20 15:18:21'),(14,1,'2024-09-20 18:30:15',100,5,200,1,'2024-09-20 15:30:31','2024-09-20 15:30:31'),(15,1,'2024-09-23 18:02:45',100,5,123,1,'2024-09-23 15:02:56','2024-09-23 15:02:56');
 /*!40000 ALTER TABLE `mediciones` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -191,7 +190,7 @@ CREATE TABLE `medicosinfoadicional` (
 
 LOCK TABLES `medicosinfoadicional` WRITE;
 /*!40000 ALTER TABLE `medicosinfoadicional` DISABLE KEYS */;
-INSERT INTO `medicosinfoadicional` (`IdMedicoInfoAdicional`, `IdUsuario`, `Especialidad`, `IdMatricula`, `Activo`, `InsDate`, `UpdDate`) VALUES (1,3,'Diabetologo',1,1,'2024-08-22 20:49:41','2024-08-22 20:49:41'),(3,5,'Diabetologo',2,1,'2024-09-03 21:30:57','2024-09-03 21:30:57'),(4,9,'Nutricionista',3,1,'2024-09-03 21:30:57','2024-09-03 21:30:57');
+INSERT INTO `medicosinfoadicional` VALUES (1,3,'Diabetologo',1,1,'2024-08-22 20:49:41','2024-08-22 20:49:41'),(3,5,'Diabetologo',2,1,'2024-09-03 21:30:57','2024-09-03 21:30:57'),(4,9,'Nutricionista',3,1,'2024-09-03 21:30:57','2024-09-03 21:30:57');
 /*!40000 ALTER TABLE `medicosinfoadicional` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -229,7 +228,7 @@ CREATE TABLE `pacientesinfoadicional` (
 
 LOCK TABLES `pacientesinfoadicional` WRITE;
 /*!40000 ALTER TABLE `pacientesinfoadicional` DISABLE KEYS */;
-INSERT INTO `pacientesinfoadicional` (`IdPacientesInfoAdicional`, `IdUsuario`, `IdCoberturaMedica`, `Peso`, `Altura`, `IdDiagnostico`, `FechaUltimaConsulta`, `Activo`, `InsDate`, `UpdDate`) VALUES (1,2,1,80,190,1,'2024-08-22',1,'2024-08-22 20:54:56','2024-08-22 20:54:56'),(2,4,1,65,165,1,'2024-08-30',1,'2024-09-03 21:33:38','2024-09-03 21:33:38'),(3,6,2,93,175,2,'2024-07-22',1,'2024-09-03 21:33:38','2024-09-03 21:33:38'),(4,7,2,78,172,3,'2024-06-12',1,'2024-09-03 21:33:38','2024-09-03 21:33:38'),(5,8,3,51,162,4,'2024-09-01',1,'2024-09-03 21:33:38','2024-09-03 21:33:38');
+INSERT INTO `pacientesinfoadicional` VALUES (1,2,1,80,190,1,'2024-08-22',1,'2024-08-22 20:54:56','2024-08-22 20:54:56'),(2,4,1,65,165,1,'2024-08-30',1,'2024-09-03 21:33:38','2024-09-03 21:33:38'),(3,6,2,93,175,2,'2024-07-22',1,'2024-09-03 21:33:38','2024-09-03 21:33:38'),(4,7,2,78,172,3,'2024-06-12',1,'2024-09-03 21:33:38','2024-09-03 21:33:38'),(5,8,3,51,162,4,'2024-09-01',1,'2024-09-03 21:33:38','2024-09-03 21:33:38');
 /*!40000 ALTER TABLE `pacientesinfoadicional` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -256,7 +255,7 @@ CREATE TABLE `roles` (
 
 LOCK TABLES `roles` WRITE;
 /*!40000 ALTER TABLE `roles` DISABLE KEYS */;
-INSERT INTO `roles` (`IdRol`, `Descripcion`, `Activo`, `InsDate`, `UpdDate`) VALUES (1,'Administrador',1,'2024-08-22 20:36:40','2024-08-22 20:36:40'),(2,'Paciente',1,'2024-08-22 20:36:48','2024-08-22 20:36:48'),(3,'Medico',1,'2024-08-22 20:36:55','2024-08-22 20:36:55');
+INSERT INTO `roles` VALUES (1,'Administrador',1,'2024-08-22 20:36:40','2024-08-22 20:36:40'),(2,'Paciente',1,'2024-08-22 20:36:48','2024-08-22 20:36:48'),(3,'Medico',1,'2024-08-22 20:36:55','2024-08-22 20:36:55');
 /*!40000 ALTER TABLE `roles` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -291,13 +290,59 @@ CREATE TABLE `usuarios` (
 
 LOCK TABLES `usuarios` WRITE;
 /*!40000 ALTER TABLE `usuarios` DISABLE KEYS */;
-INSERT INTO `usuarios` (`IdUsuario`, `Nombre`, `Apellido`, `NroDocumento`, `email`, `FechaNacimiento`, `RutaFoto`, `IdRol`, `Activo`, `InsDate`, `UpdDate`) VALUES (1,'Admin','Admin','00000000','admin@diabecheck.com','2001-09-27','ruta',1,1,'2024-08-22 20:39:38','2024-08-22 20:39:38'),(2,'Paciente','Uno','0000001','paciente01@gmail.com','1991-08-14','ruta',2,1,'2024-08-22 20:46:01','2024-08-22 20:46:01'),(3,'Medico','Uno','0000002','Medico01@gmail.com','1982-05-09','ruta',3,1,'2024-08-22 20:46:25','2024-08-22 20:46:25'),(4,'Paciente','Dos','0000003','Paciente02@gmail.com','1998-05-14','ruta',2,1,'2024-09-03 21:24:49','2024-09-03 21:24:49'),(5,'Medico','Dos','0000004','Medico02@gmail.com','1993-04-28','ruta',3,1,'2024-09-03 21:24:49','2024-09-03 21:24:49'),(6,'Paciente','Tres','0000005','Paciente03@gmail.com','1974-06-03','ruta',2,1,'2024-09-03 21:24:49','2024-09-03 21:24:49'),(7,'Paciente ','Cuatro ','0000006','paciente04@gmail.com','2002-12-16','ruta',2,1,'2024-09-03 21:24:49','2024-09-03 21:24:49'),(8,'Paciente','Cinco','0000007','paciente05@gmail.com','1986-10-15','ruta',2,1,'2024-09-03 21:24:49','2024-09-03 21:24:49'),(9,'Medico','Tres','0000008','medico03@gmail.com','1971-02-14','ruta',3,1,'2024-09-03 21:24:49','2024-09-03 21:24:49');
+INSERT INTO `usuarios` VALUES (1,'Admin','Admin','00000000','admin@diabecheck.com','2001-09-27','ruta',1,1,'2024-08-22 20:39:38','2024-08-22 20:39:38'),(2,'Paciente','Uno','0000001','paciente01@gmail.com','1991-08-14','ruta',2,1,'2024-08-22 20:46:01','2024-08-22 20:46:01'),(3,'Medico','Uno','0000002','Medico01@gmail.com','1982-05-09','ruta',3,1,'2024-08-22 20:46:25','2024-08-22 20:46:25'),(4,'Paciente','Dos','0000003','Paciente02@gmail.com','1998-05-14','ruta',2,1,'2024-09-03 21:24:49','2024-09-03 21:24:49'),(5,'Medico','Dos','0000004','Medico02@gmail.com','1993-04-28','ruta',3,1,'2024-09-03 21:24:49','2024-09-03 21:24:49'),(6,'Paciente','Tres','0000005','Paciente03@gmail.com','1974-06-03','ruta',2,1,'2024-09-03 21:24:49','2024-09-03 21:24:49'),(7,'Paciente ','Cuatro ','0000006','paciente04@gmail.com','2002-12-16','ruta',2,1,'2024-09-03 21:24:49','2024-09-03 21:24:49'),(8,'Paciente','Cinco','0000007','paciente05@gmail.com','1986-10-15','ruta',2,1,'2024-09-03 21:24:49','2024-09-03 21:24:49'),(9,'Medico','Tres','0000008','medico03@gmail.com','1971-02-14','ruta',3,1,'2024-09-03 21:24:49','2024-09-03 21:24:49');
 /*!40000 ALTER TABLE `usuarios` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
 -- Dumping routines for database 'diabecheckv2'
 --
+/*!50003 DROP PROCEDURE IF EXISTS `GetMediciones` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `GetMediciones`(IN pacienteId INT, month INT, year INT)
+BEGIN
+	SELECT m.*, u.Nombre, u.Apellido
+    FROM mediciones AS m
+    INNER JOIN pacientesinfoadicional AS padd ON mediciones.IdPaciente = padd.IdPacientesInfoAdicional
+    INNER JOIN usuarios AS u ON padd.IdUsuario = u.IdUsuario
+    WHERE MONTH(Fecha) = month AND YEAR(Fecha) = year AND IdPaciente = pacienteId
+    ORDER BY Fecha ASC;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `GetMedicoByMatricula` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `GetMedicoByMatricula`(matricula INT)
+BEGIN
+	SELECT *
+	FROM medicosinfoadicional M
+	INNER JOIN matriculas Mat ON Mat.IdMatricula = M.IdMatricula
+	WHERE Mat.NumeroMatricula = matricula;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
 /*!50003 DROP PROCEDURE IF EXISTS `GetMedicos` */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -308,13 +353,39 @@ UNLOCK TABLES;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` PROCEDURE `GetMedicos`()
+CREATE DEFINER=`root`@`localhost` PROCEDURE `GetMedicos`(pacienteId INT)
 BEGIN
-	SELECT U.IdUsuario, U.Nombre, U.Apellido, U.NroDocumento, U.FechaNacimiento, U.RutaFoto,
-    M.IdMedicoInfoAdicional, M.IdMatricula, M.Especialidad
-    FROM usuarios U
-    INNER JOIN medicosinfoadicional M ON U.IdUsuario = M.IdUsuario
-    WHERE U.IdRol = 1 AND U.Activo = 1;
+	SELECT U.Apellido, U.Nombre, U.IdUsuario, M.IdMatricula
+    FROM medicosinfoadicional M
+	INNER JOIN usuarios U ON M.IdUsuario = U.IdUsuario
+    INNER JOIN conexionesmedicopaciente C ON C.IdMedico = U.IdUsuario
+    INNER JOIN pacientesinfoadicional P ON P.IdUsuario = C.IdPaciente
+    WHERE P.IdPacientesInfoAdicional = pacienteId;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
+/*!50003 DROP PROCEDURE IF EXISTS `GetPacienteDetails` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `GetPacienteDetails`(IN pacienteId INT)
+BEGIN
+    SELECT u.*, cm.Descripcion AS coberturaMedica, d.Descripcion AS diagnostico, padd.Altura, padd.Peso, padd.IdPacientesInfoAdicional
+    FROM conexionesmedicopaciente AS c
+    INNER JOIN usuarios AS u ON c.IdPaciente = u.IdUsuario
+    INNER JOIN pacientesinfoadicional AS padd ON padd.IdUsuario = u.IdUsuario
+    INNER JOIN diagnosticos AS d ON padd.idDiagnostico = d.idDiagnostico
+    INNER JOIN coberturamedica AS cm ON cm.IdCoberturaMedica = padd.IdCoberturaMedica
+    WHERE u.IdUsuario = pacienteId;
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -355,4 +426,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2024-09-03 22:06:14
+-- Dump completed on 2024-09-23 19:48:54
