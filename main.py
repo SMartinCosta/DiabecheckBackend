@@ -207,9 +207,7 @@ async def get_solicitudes(medico_id: int, db: Session = Depends(get_db)):
     stmt = text('CALL `diabecheckv2`.`GetSolicitudesByMedico`(:medico_id)')
     result = db.execute(stmt, {"medico_id": medico_id})
     solicitudes = result.fetchall()
-    
-    if not solicitudes:
-        raise HTTPException(status_code=404, detail="No solicitudes found for this medico")
+
     result_list = [dict(row._mapping) for row in solicitudes]
   
     return result_list
