@@ -80,3 +80,12 @@ class Mediciones(Base):
     Glucosa = Column(Integer)
     Insulina = Column(Integer)
     Carbohidratos = Column(Integer)
+ 
+class Archivos(Base):
+    __tablename__ ="archivos"
+    IdArchivo = Column(Integer, primary_key=True, index=True)
+    IdPaciente = Column(Integer, ForeignKey('usuarios.IdUsuario'))
+    Nombre = Column(String)
+    RutaArchivo = Column(String)
+    FechaPublicacion = Column(DateTime)
+    IdUsuario = Column(Integer, ForeignKey('usuarios.IdUsuario'))
