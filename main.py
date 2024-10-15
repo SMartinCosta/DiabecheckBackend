@@ -45,7 +45,12 @@ async def create_medicion(medicion: dict, request: Request, db: Session = Depend
         raise HTTPException(status_code=400, detail="Debe completar al menos uno de los campos de medición")
     
     fecha = datetime.fromisoformat(medicion['Fecha'].replace("Z", "+00:00"))
-
+    if not glucosa:
+        glucosa=0;
+    if not insulina:
+        insulina=0;
+    if not carbohidratos:
+        carbohidratos=0;
     # Crear nueva medición
     db_medicion = models.Mediciones(
         Fecha=fecha,
@@ -80,12 +85,12 @@ async def get_user_role(
     user_id: int = Query(None),  # IdUsuario también es opcional
     db: Session = Depends(get_db)):
 
-    user_query_patient = db.query(models.User).outerjoin(models.PacientesInfoAdicional, models.User.IdUsuario == models.PacientesInfoAdicional.IdUsuario)
+    user_query_patient = db.query(models.User)
     
     if email:
         user = db.query(models.User).filter(models.User.email == email).first()
     elif user_id:
-        user = user_query_patient.filter(models.PacientesInfoAdicional.IdPacientesInfoAdicional == user_id).first()
+        user = user_query_patient.filter(models.User.IdUsuario == user_id).first()
     else:
         raise HTTPException(status_code=400, detail="Debe proporcionar email o IdUsuario")
     
@@ -94,13 +99,13 @@ async def get_user_role(
 
     response = {"IdUsuario": user.IdUsuario, "Rol": user.rol.Descripcion}
 
-    if user.rol.Descripcion == "Medico":
-        medico = db.query(models.MedicosInfoAdicional).filter(models.MedicosInfoAdicional.IdUsuario == user.IdUsuario).first()
-        response["medicoId"] = medico.IdMedicoInfoAdicional if medico else None
+    # if user.rol.Descripcion == "Medico":
+    #     medico = db.query(models.MedicosInfoAdicional).filter(models.MedicosInfoAdicional.IdUsuario == user.IdUsuario).first()
+    #     response["medicoId"] = medico.IdMedicoInfoAdicional if medico else None
 
-    if user.rol.Descripcion == "Paciente":
-        paciente = db.query(models.PacientesInfoAdicional).filter(models.PacientesInfoAdicional.IdUsuario == user.IdUsuario).first()
-        response["IdPaciente"] = paciente.IdPacientesInfoAdicional if paciente else None
+    # if user.rol.Descripcion == "Paciente":
+    #     paciente = db.query(models.PacientesInfoAdicional).filter(models.PacientesInfoAdicional.IdUsuario == user.IdUsuario).first()
+    #     response["IdPaciente"] = paciente.IdPacientesInfoAdicional if paciente else None
 
     return response
 
@@ -154,8 +159,6 @@ async def get_medico_for_patients(paciente_id: int, db: Session = Depends(get_db
     stmt = text('CALL `diabecheckv2`.`GetMedicos`('+str(paciente_id)+')')
     result = db.execute(stmt)
     medicos = result.fetchall()
-    if not medicos:
-        raise HTTPException(status_code=404, detail="No medico found for this patient")
     result_list = [dict(row._mapping) for row in medicos]
   
     return result_list
@@ -207,9 +210,7 @@ async def get_solicitudes(medico_id: int, db: Session = Depends(get_db)):
     stmt = text('CALL `diabecheckv2`.`GetSolicitudesByMedico`(:medico_id)')
     result = db.execute(stmt, {"medico_id": medico_id})
     solicitudes = result.fetchall()
-    
-    if not solicitudes:
-        raise HTTPException(status_code=404, detail="No solicitudes found for this medico")
+
     result_list = [dict(row._mapping) for row in solicitudes]
   
     return result_list
@@ -253,6 +254,14 @@ async def get_medico_for_patients(matricula: int, db: Session = Depends(get_db))
     if not medicos:
         raise HTTPException(status_code=404, detail="No medico found for this patient")
     result_list = [dict(row._mapping) for row in medicos]
+  
+    return result_list
+@app.get("/pacientes/{idPaciente}/archivos")
+async def get_archivos_paciente(idPaciente: int, db: Session = Depends(get_db)):
+    stmt = text('CALL `diabecheckv2`.`GetArchivosPaciente`('+str(idPaciente)+')')
+    result = db.execute(stmt)
+    archivos = result.fetchall()
+    result_list = [dict(row._mapping) for row in archivos]
   
     return result_list
 

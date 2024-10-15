@@ -1,7 +1,8 @@
 {
   "ExpandedNodes": [
-    ""
+    "",
+    "\\database"
   ],
-  "SelectedNode": "\\__pycache__",
+  "SelectedNode": "\\database\\Dump20240923.sql",
   "PreviewInSolutionExplorer": false
 }
