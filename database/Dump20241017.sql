@@ -1,10 +1,8 @@
-CREATE DATABASE  IF NOT EXISTS `diabecheckv2` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
-USE `diabecheckv2`;
--- MySQL dump 10.13  Distrib 8.0.38, for Win64 (x86_64)
+-- MySQL dump 10.13  Distrib 8.0.38, for macos14 (arm64)
 --
 -- Host: localhost    Database: diabecheckv2
 -- ------------------------------------------------------
--- Server version	8.0.39
+-- Server version	8.0.36
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -27,20 +25,23 @@ DROP TABLE IF EXISTS `archivos`;
 CREATE TABLE `archivos` (
   `IdArchivo` int NOT NULL AUTO_INCREMENT,
   `IdPaciente` int NOT NULL,
-  `Nombre` varchar(45) NOT NULL,
-  `RutaArchivo` varchar(45) NOT NULL,
+  `RutaArchivo` varchar(400) NOT NULL,
   `FechaPublicacion` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `IdUsuario` int NOT NULL,
   `Activo` int NOT NULL DEFAULT '1',
   `InsDate` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `UpdDate` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `tipoArchivo` int NOT NULL,
+  `Nombre` varchar(45) DEFAULT NULL,
   PRIMARY KEY (`IdArchivo`),
   UNIQUE KEY `IdArchivo_UNIQUE` (`IdArchivo`),
   KEY `IdPaciente_idx` (`IdPaciente`),
   KEY `IdUsuario_idx` (`IdUsuario`),
+  KEY `FK_IdTipoArchivo_IdTipoArchivo_idx` (`tipoArchivo`),
   CONSTRAINT `FK_IdPaciente_IdUsuario` FOREIGN KEY (`IdPaciente`) REFERENCES `usuarios` (`IdUsuario`),
+  CONSTRAINT `FK_IdTipoArchivo_IdTipoArchivo` FOREIGN KEY (`tipoArchivo`) REFERENCES `tipoArchivo` (`idtipoArchivo`),
   CONSTRAINT `FK_IdUsuario_IdUsuario` FOREIGN KEY (`IdUsuario`) REFERENCES `usuarios` (`IdUsuario`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -49,7 +50,7 @@ CREATE TABLE `archivos` (
 
 LOCK TABLES `archivos` WRITE;
 /*!40000 ALTER TABLE `archivos` DISABLE KEYS */;
-INSERT INTO `archivos` VALUES (1,2,'Planilla','0.png','2024-10-12 15:46:43',3,1,'2024-10-12 15:46:43','2024-10-12 15:46:43');
+INSERT INTO `archivos` VALUES (1,2,'0.png','2024-10-12 15:46:43',3,1,'2024-10-12 15:46:43','2024-10-12 15:46:43',1,NULL),(12,7,'https://firebasestorage.googleapis.com/v0/b/diabecheck-c8563.appspot.com/o/documentos%2F7%2F2024-10-17T20%3A42%3A36.030Z?alt=media&token=dcdb7eb0-dbea-4c72-a60d-81dbf9096b4f','2024-10-17 20:42:39',3,1,'2024-10-17 17:42:39','2024-10-17 17:42:39',3,'test');
 /*!40000 ALTER TABLE `archivos` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -298,6 +299,30 @@ INSERT INTO `roles` VALUES (1,'Administrador',1,'2024-08-22 20:36:40','2024-08-2
 UNLOCK TABLES;
 
 --
+-- Table structure for table `tipoArchivo`
+--
+
+DROP TABLE IF EXISTS `tipoArchivo`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `tipoArchivo` (
+  `idtipoArchivo` int NOT NULL AUTO_INCREMENT,
+  `descripcion` varchar(45) NOT NULL,
+  PRIMARY KEY (`idtipoArchivo`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `tipoArchivo`
+--
+
+LOCK TABLES `tipoArchivo` WRITE;
+/*!40000 ALTER TABLE `tipoArchivo` DISABLE KEYS */;
+INSERT INTO `tipoArchivo` VALUES (1,'Planilla'),(2,'Receta'),(3,'Estudio'),(4,'Extraccion de sangre');
+/*!40000 ALTER TABLE `tipoArchivo` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `usuarios`
 --
 
@@ -328,7 +353,7 @@ CREATE TABLE `usuarios` (
 
 LOCK TABLES `usuarios` WRITE;
 /*!40000 ALTER TABLE `usuarios` DISABLE KEYS */;
-INSERT INTO `usuarios` VALUES (1,'Admin','Admin','00000000','admin@diabecheck.com','2001-09-27','0.png',1,1,'2024-08-22 20:39:38','2024-08-22 20:39:38'),(2,'Paciente','Uno','0000001','paciente01@gmail.com','1991-08-14','1.png',2,1,'2024-08-22 20:46:01','2024-08-22 20:46:01'),(3,'Medico','Uno','0000002','Medico01@gmail.com','1982-05-09','0.png',3,1,'2024-08-22 20:46:25','2024-08-22 20:46:25'),(4,'Paciente','Dos','0000003','Paciente02@gmail.com','1998-05-14','2.png',2,1,'2024-09-03 21:24:49','2024-09-03 21:24:49'),(5,'Medico','Dos','0000004','Medico02@gmail.com','1993-04-28','0.png',3,1,'2024-09-03 21:24:49','2024-09-03 21:24:49'),(6,'Paciente','Tres','0000005','Paciente03@gmail.com','1974-06-03','0.png',2,1,'2024-09-03 21:24:49','2024-09-03 21:24:49'),(7,'Paciente ','Cuatro ','0000006','paciente04@gmail.com','2002-12-16','0.png',2,1,'2024-09-03 21:24:49','2024-09-03 21:24:49'),(8,'Paciente','Cinco','0000007','paciente05@gmail.com','1986-10-15','0.png',2,1,'2024-09-03 21:24:49','2024-09-03 21:24:49'),(9,'Medico','Tres','0000008','medico03@gmail.com','1971-02-14','0.png',3,1,'2024-09-03 21:24:49','2024-09-03 21:24:49');
+INSERT INTO `usuarios` VALUES (1,'Admin','Admin','00000000','admin@diabecheck.com','2001-09-27','0.png',1,1,'2024-08-22 20:39:38','2024-08-22 20:39:38'),(2,'Paciente','Uno','0000001','paciente01@gmail.com','1991-08-14','1.png',2,1,'2024-08-22 20:46:01','2024-08-22 20:46:01'),(3,'Medico','Uno','0000002','Medico01@gmail.com','1982-05-09','0.png',3,1,'2024-08-22 20:46:25','2024-08-22 20:46:25'),(4,'Paciente','Dos','0000003','Paciente02@gmail.com','1998-05-14','2.png',2,1,'2024-09-03 21:24:49','2024-09-03 21:24:49'),(5,'Medico','Dos','0000004','Medico02@gmail.com','1993-04-28','0.png',3,1,'2024-09-03 21:24:49','2024-09-03 21:24:49'),(6,'Paciente','Tres','0000005','Paciente03@gmail.com','1974-06-03','0.png',2,1,'2024-09-03 21:24:49','2024-09-03 21:24:49'),(7,'Paciente ','Cuatro','0000006','paciente04@gmail.com','2002-12-16','0.png',2,1,'2024-09-03 21:24:49','2024-09-03 21:24:49'),(8,'Paciente','Cinco','0000007','paciente05@gmail.com','1986-10-15','0.png',2,1,'2024-09-03 21:24:49','2024-09-03 21:24:49'),(9,'Medico','Tres','0000008','medico03@gmail.com','1971-02-14','0.png',3,1,'2024-09-03 21:24:49','2024-09-03 21:24:49');
 /*!40000 ALTER TABLE `usuarios` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -466,7 +491,8 @@ BEGIN
     INNER JOIN usuarios AS u ON c.IdPaciente = u.IdUsuario
     INNER JOIN pacientesinfoadicional AS padd on padd.IdUsuario = u.IdUsuario
     INNER JOIN coberturamedica as cm ON cm.IdCoberturaMedica = padd.IdCoberturaMedica
-    WHERE c.IdMedico = medicoId AND c.estado = "aceptada";
+    WHERE c.IdMedico = medicoId AND c.estado = "aceptada"
+    ORDER BY u.Apellido;
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -505,4 +531,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2024-10-14 19:43:12
+-- Dump completed on 2024-10-17 18:44:49
