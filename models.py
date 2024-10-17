@@ -89,3 +89,11 @@ class Archivos(Base):
     RutaArchivo = Column(String)
     FechaPublicacion = Column(DateTime)
     IdUsuario = Column(Integer, ForeignKey('usuarios.IdUsuario'))
+    tipoArchivo = Column(Integer, ForeignKey('tipoArchivo.idtipoArchivo'))
+
+
+class TiposDeArchivo(Base):
+    __tablename__ ="tipoArchivo"
+    idtipoArchivo = Column(Integer, primary_key=True, index=True)
+    descripcion = Column(String)
+

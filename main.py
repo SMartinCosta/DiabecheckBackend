@@ -29,6 +29,15 @@ class SolicitudMedicoRequest(BaseModel):
     matricula: int
     paciente_id: int
 
+class ArchivoBase(BaseModel):
+    id_paciente: int
+    nombre: str
+    ruta_archivo: str
+    fecha_publicacion: datetime
+    id_usuario: int
+    id_tipoarchivo: int
+
+
 @app.post("/mediciones/")
 async def create_medicion(medicion: dict, request: Request, db: Session = Depends(get_db)):
     body = await request.json()  # Obtener datos del cuerpo de la solicitud
@@ -256,6 +265,7 @@ async def get_medico_for_patients(matricula: int, db: Session = Depends(get_db))
     result_list = [dict(row._mapping) for row in medicos]
   
     return result_list
+
 @app.get("/pacientes/{idPaciente}/archivos")
 async def get_archivos_paciente(idPaciente: int, db: Session = Depends(get_db)):
     stmt = text('CALL `diabecheckv2`.`GetArchivosPaciente`('+str(idPaciente)+')')
@@ -264,6 +274,33 @@ async def get_archivos_paciente(idPaciente: int, db: Session = Depends(get_db)):
     result_list = [dict(row._mapping) for row in archivos]
   
     return result_list
+
+
+@app.post("/archivos/")
+async def create_archivo(archivo: ArchivoBase, db: Session = Depends(get_db)):
+    nuevo_archivo = models.Archivos(
+        IdPaciente=archivo.id_paciente,
+        Nombre=archivo.nombre,
+        RutaArchivo=archivo.ruta_archivo,
+        FechaPublicacion=archivo.fecha_publicacion,
+        IdUsuario=archivo.id_usuario,
+        tipoArchivo=archivo.id_tipoarchivo
+    )
+    
+    db.add(nuevo_archivo)
+    db.commit()
+    db.refresh(nuevo_archivo)
+    
+    return {"message": "Archivo registrado exitosamente", "archivo": nuevo_archivo}
+
+
+@app.get("/tipoarchivo")
+async def get_tiposarchivo(db: Session = Depends(get_db)):
+    stmt = text('SELECT * FROM tipoArchivo')
+    result = db.execute(stmt)
+    tipos = result.fetchall()
+    return [dict(row._mapping) for row in tipos]
+
 
 
 def activate(self, db: Session = Depends(get_db)):
