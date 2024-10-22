@@ -78,7 +78,7 @@ async def create_medicion(medicion: dict, request: Request, db: Session = Depend
 
 @app.post("/signIn/")
 async def login(email: str = Form(), db: Session = Depends(get_db)):
-    db_user = db.query(models.User).filter(models.User.email == email).first()
+    db_user = db.query(models.User).filter(models.User.email == email and models.User.Active == 1).first()
     if db_user.role == 'medico':
         medico = db.query(models.Medico).filter(models.Medico.idUser == db_user.id).first()
         if not medico:
@@ -97,9 +97,9 @@ async def get_user_role(
     user_query_patient = db.query(models.User)
     
     if email:
-        user = db.query(models.User).filter(models.User.email == email).first()
+        user = db.query(models.User).filter(models.User.email == email and models.User.Active == 1).first()
     elif user_id:
-        user = user_query_patient.filter(models.User.IdUsuario == user_id).first()
+        user = user_query_patient.filter(models.User.IdUsuario == user_id and models.User.Active == 1).first()
     else:
         raise HTTPException(status_code=400, detail="Debe proporcionar email o IdUsuario")
     
@@ -158,7 +158,7 @@ async def get_paciente_details(paciente_id: int, db: Session = Depends(get_db)):
 
 @app.get("/pacientes/{patient_id}/mediciones")
 async def get_mediciones(patient_id: int, month: int, year: int, db: Session = Depends(get_db)):
-    stmt = text('SELECT * FROM mediciones WHERE MONTH(Fecha) = :month AND YEAR(Fecha) = :year AND IdPaciente = :patient_id ORDER BY Fecha ASC')
+    stmt = text('SELECT * FROM mediciones WHERE MONTH(Fecha) = :month AND YEAR(Fecha) = :year AND IdPaciente = :patient_id AND Activo = 1 ORDER BY Fecha ASC')
     result = db.execute(stmt, {'month': month, 'year': year, 'patient_id': patient_id})
     mediciones = result.fetchall()
     return [dict(row._mapping) for row in mediciones]
@@ -178,7 +178,7 @@ async def crear_solicitud_medico(solicitud: SolicitudMedicoRequest, db: Session 
     matricula = solicitud.matricula
     paciente_id = solicitud.paciente_id
 
-    relacion = db.query(models.PacientesInfoAdicional).filter(models.PacientesInfoAdicional.IdPacientesInfoAdicional == paciente_id).first()
+    relacion = db.query(models.PacientesInfoAdicional).filter(models.PacientesInfoAdicional.IdPacientesInfoAdicional == paciente_id and models.PacientesInfoAdicional.Activo == 1).first()
     paciente_id = relacion.IdUsuario
 
     # Buscar al médico por su matrícula
@@ -226,7 +226,7 @@ async def get_solicitudes(medico_id: int, db: Session = Depends(get_db)):
 
 @app.post("/medico/solicitudes/aceptar/{id_solicitud}/")
 async def aceptar_solicitud(id_solicitud: int, db: Session = Depends(get_db)):
-    solicitud = db.query(models.Conexiones).filter(models.Conexiones.IdConexionMedicoPaciente == id_solicitud).first()
+    solicitud = db.query(models.Conexiones).filter(models.Conexiones.IdConexionMedicoPaciente == id_solicitud and models.Conexiones == 1).first()
 
     if not solicitud:
         raise HTTPException(status_code=404, detail="Solicitud no encontrada")
@@ -241,7 +241,7 @@ async def aceptar_solicitud(id_solicitud: int, db: Session = Depends(get_db)):
 
 @app.post("/medico/solicitudes/rechazar/{id_solicitud}/")
 async def rechazar_solicitud(id_solicitud: int, db: Session = Depends(get_db)):
-    solicitud = db.query(models.Conexiones).filter(models.Conexiones.IdConexionMedicoPaciente == id_solicitud).first()
+    solicitud = db.query(models.Conexiones).filter(models.Conexiones.IdConexionMedicoPaciente == id_solicitud and models.Conexiones.Activo == 1).first()
 
     if not solicitud:
         raise HTTPException(status_code=404, detail="Solicitud no encontrada")
@@ -296,13 +296,26 @@ async def create_archivo(archivo: ArchivoBase, db: Session = Depends(get_db)):
 
 @app.get("/tipoarchivo")
 async def get_tiposarchivo(db: Session = Depends(get_db)):
-    stmt = text('SELECT * FROM tipoArchivo')
+    stmt = text('SELECT * FROM tipoArchivo WHERE Activo =1')
     result = db.execute(stmt)
     tipos = result.fetchall()
     return [dict(row._mapping) for row in tipos]
 
+@app.post("/archivos/borrar/{idArchivo}")
+async def delete_archivo(idArchivo: int, db: Session = Depends(get_db)):
+    archivo = db.query(models.Archivos).filter(models.Archivos.IdArchivo == idArchivo and models.Archivos.Activo==1).first()
 
+    if not archivo:
+        raise HTTPException(status_code=404, detail="Archivo no encontrada")
 
+    if archivo.Activo != 1:
+        raise HTTPException(status_code=400, detail="El archivo ya fue eliminado")
+
+    # Actualizar estado a "rechazada"
+    archivo.Activo = 0
+    db.commit()
+
+    return {"msg": "Solicitud rechazada exitosamente"}
 def activate(self, db: Session = Depends(get_db)):
     self.Roles = db.query(models.Rol)
     

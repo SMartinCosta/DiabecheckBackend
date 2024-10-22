@@ -1,8 +1,10 @@
--- MySQL dump 10.13  Distrib 8.0.38, for macos14 (arm64)
+CREATE DATABASE  IF NOT EXISTS `diabecheckv2` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
+USE `diabecheckv2`;
+-- MySQL dump 10.13  Distrib 8.0.38, for Win64 (x86_64)
 --
 -- Host: localhost    Database: diabecheckv2
 -- ------------------------------------------------------
--- Server version	8.0.36
+-- Server version	8.0.39
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -39,9 +41,9 @@ CREATE TABLE `archivos` (
   KEY `IdUsuario_idx` (`IdUsuario`),
   KEY `FK_IdTipoArchivo_IdTipoArchivo_idx` (`tipoArchivo`),
   CONSTRAINT `FK_IdPaciente_IdUsuario` FOREIGN KEY (`IdPaciente`) REFERENCES `usuarios` (`IdUsuario`),
-  CONSTRAINT `FK_IdTipoArchivo_IdTipoArchivo` FOREIGN KEY (`tipoArchivo`) REFERENCES `tipoArchivo` (`idtipoArchivo`),
+  CONSTRAINT `FK_IdTipoArchivo_IdTipoArchivo` FOREIGN KEY (`tipoArchivo`) REFERENCES `tipoarchivo` (`idtipoArchivo`),
   CONSTRAINT `FK_IdUsuario_IdUsuario` FOREIGN KEY (`IdUsuario`) REFERENCES `usuarios` (`IdUsuario`)
-) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -50,7 +52,7 @@ CREATE TABLE `archivos` (
 
 LOCK TABLES `archivos` WRITE;
 /*!40000 ALTER TABLE `archivos` DISABLE KEYS */;
-INSERT INTO `archivos` VALUES (1,2,'0.png','2024-10-12 15:46:43',3,1,'2024-10-12 15:46:43','2024-10-12 15:46:43',1,NULL),(12,7,'https://firebasestorage.googleapis.com/v0/b/diabecheck-c8563.appspot.com/o/documentos%2F7%2F2024-10-17T20%3A42%3A36.030Z?alt=media&token=dcdb7eb0-dbea-4c72-a60d-81dbf9096b4f','2024-10-17 20:42:39',3,1,'2024-10-17 17:42:39','2024-10-17 17:42:39',3,'test');
+INSERT INTO `archivos` VALUES (1,2,'0.png','2024-10-12 15:46:43',3,0,'2024-10-12 15:46:43','2024-10-12 15:46:43',1,'Prueba'),(12,7,'https://firebasestorage.googleapis.com/v0/b/diabecheck-c8563.appspot.com/o/documentos%2F7%2F2024-10-17T20%3A42%3A36.030Z?alt=media&token=dcdb7eb0-dbea-4c72-a60d-81dbf9096b4f','2024-10-17 20:42:39',3,1,'2024-10-17 17:42:39','2024-10-17 17:42:39',3,'test'),(13,7,'https://firebasestorage.googleapis.com/v0/b/diabecheck-c8563.appspot.com/o/documentos%2F7%2F2024-10-17T22%3A12%3A57.617Z?alt=media&token=5cb702b0-52b3-44cc-bb2f-a0730826715a','2024-10-17 22:13:02',3,1,'2024-10-17 19:13:02','2024-10-17 19:13:02',1,'test'),(14,7,'https://firebasestorage.googleapis.com/v0/b/diabecheck-c8563.appspot.com/o/documentos%2F7%2F2024-10-17T22%3A20%3A18.784Z?alt=media&token=2c01a9b0-1f41-4a17-8558-5fd57f6cbaf2','2024-10-17 22:20:21',3,1,'2024-10-17 19:20:21','2024-10-17 19:20:21',4,'test'),(15,7,'https://firebasestorage.googleapis.com/v0/b/diabecheck-c8563.appspot.com/o/documentos%2F7%2F2024-10-17T22%3A33%3A13.047Z?alt=media&token=c4df61e2-ba91-49fe-b2c1-5120d1bf67f9','2024-10-17 22:33:15',3,1,'2024-10-17 19:33:15','2024-10-17 19:33:15',1,'Prueba'),(16,6,'https://firebasestorage.googleapis.com/v0/b/diabecheck-c8563.appspot.com/o/documentos%2F6%2F2024-10-17T22%3A57%3A24.862Z?alt=media&token=bbd7f61f-c913-4480-8edb-7dd3b50f601a','2024-10-17 22:57:29',3,1,'2024-10-17 19:57:28','2024-10-17 19:57:28',1,'Prueba 3'),(17,6,'https://firebasestorage.googleapis.com/v0/b/diabecheck-c8563.appspot.com/o/documentos%2F6%2F2024-10-17T23%3A12%3A36.103Z?alt=media&token=5022209d-b216-403a-90af-6cddb858a8f8','2024-10-17 23:12:39',3,1,'2024-10-17 20:13:15','2024-10-17 20:13:15',2,'Pruebas');
 /*!40000 ALTER TABLE `archivos` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -98,7 +100,9 @@ CREATE TABLE `conexionesmedicopaciente` (
   `estado` varchar(45) NOT NULL,
   PRIMARY KEY (`IdConexionMedicoPaciente`),
   KEY `FK_ConexionesMedicoPaciente_idx` (`IdMedico`),
-  KEY `FK_ConexionesMedicoPaciente_2_idx` (`IdPaciente`)
+  KEY `FK_ConexionesMedicoPaciente_2_idx` (`IdPaciente`),
+  CONSTRAINT `FK_Medico` FOREIGN KEY (`IdMedico`) REFERENCES `usuarios` (`IdUsuario`),
+  CONSTRAINT `FK_Paciente` FOREIGN KEY (`IdPaciente`) REFERENCES `usuarios` (`IdUsuario`)
 ) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -299,13 +303,13 @@ INSERT INTO `roles` VALUES (1,'Administrador',1,'2024-08-22 20:36:40','2024-08-2
 UNLOCK TABLES;
 
 --
--- Table structure for table `tipoArchivo`
+-- Table structure for table `tipoarchivo`
 --
 
-DROP TABLE IF EXISTS `tipoArchivo`;
+DROP TABLE IF EXISTS `tipoarchivo`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `tipoArchivo` (
+CREATE TABLE `tipoarchivo` (
   `idtipoArchivo` int NOT NULL AUTO_INCREMENT,
   `descripcion` varchar(45) NOT NULL,
   PRIMARY KEY (`idtipoArchivo`)
@@ -313,13 +317,13 @@ CREATE TABLE `tipoArchivo` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `tipoArchivo`
+-- Dumping data for table `tipoarchivo`
 --
 
-LOCK TABLES `tipoArchivo` WRITE;
-/*!40000 ALTER TABLE `tipoArchivo` DISABLE KEYS */;
-INSERT INTO `tipoArchivo` VALUES (1,'Planilla'),(2,'Receta'),(3,'Estudio'),(4,'Extraccion de sangre');
-/*!40000 ALTER TABLE `tipoArchivo` ENABLE KEYS */;
+LOCK TABLES `tipoarchivo` WRITE;
+/*!40000 ALTER TABLE `tipoarchivo` DISABLE KEYS */;
+INSERT INTO `tipoarchivo` VALUES (1,'Planilla'),(2,'Receta'),(3,'Estudio'),(4,'Extraccion de sangre');
+/*!40000 ALTER TABLE `tipoarchivo` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -360,6 +364,25 @@ UNLOCK TABLES;
 --
 -- Dumping routines for database 'diabecheckv2'
 --
+/*!50003 DROP PROCEDURE IF EXISTS `DelArchivo` */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `DelArchivo`(idArchivoDel INT)
+BEGIN
+	UPDATE archivos SET Activo = 0 WHERE idArchivo =idArchivoDel;
+END ;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
 /*!50003 DROP PROCEDURE IF EXISTS `GetArchivosPaciente` */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -374,7 +397,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `GetArchivosPaciente`(paciente_id IN
 SELECT a.IdArchivo, a.Nombre, a.RutaArchivo, a.FechaPublicacion, u.Apellido ApellidoCreador, u.Nombre NombreCreador
 	FROM archivos a
     INNER JOIN usuarios u ON a.IdUsuario = u.IdUsuario
-    WHERE idPaciente = paciente_id
+    WHERE idPaciente = paciente_id AND a.Activo = 1
 	ORDER BY FechaPublicacion ASC ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -396,7 +419,7 @@ BEGIN
 	SELECT m.*, u.Nombre, u.Apellido
     FROM mediciones AS m
     INNER JOIN usuarios AS u ON m.IdPaciente = u.IdUsuario
-    WHERE MONTH(Fecha) = month AND YEAR(Fecha) = year AND IdPaciente = pacienteId
+    WHERE MONTH(Fecha) = month AND YEAR(Fecha) = year AND IdPaciente = pacienteId AND m.Activo = 1
     ORDER BY Fecha ASC;
 END ;;
 DELIMITER ;
@@ -419,7 +442,8 @@ BEGIN
 	SELECT *
 	FROM medicosinfoadicional M
 	INNER JOIN matriculas Mat ON Mat.IdMatricula = M.IdMatricula
-	WHERE Mat.NumeroMatricula = matricula;
+	WHERE Mat.NumeroMatricula = matricula
+    AND M.Activo = 1;
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -442,7 +466,7 @@ BEGIN
 	FROM usuarios U 
     INNER JOIN medicosinfoadicional M ON M.idUsuario = U.idUsuario
     INNER JOIN conexionesmedicopaciente C ON C.IdMedico = U.IdUsuario
-    WHERE C.IdPaciente = pacienteId AND estado = 'aceptada';
+    WHERE C.IdPaciente = pacienteId AND estado = 'aceptada' AND Activo =1;
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -459,15 +483,14 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-CREATE DEFINER=`root`@`localhost` PROCEDURE `GetPacienteDetails`(IN pacienteId INT)
+CREATE DEFINER=`root`@`localhost` PROCEDURE `GetPacienteDetails`(pacienteId INT)
 BEGIN
-    SELECT u.*, cm.Descripcion AS coberturaMedica, d.Descripcion AS diagnostico, padd.Altura, padd.Peso, padd.IdPacientesInfoAdicional
-    FROM conexionesmedicopaciente AS c
-    INNER JOIN usuarios AS u ON c.IdPaciente = u.IdUsuario
+    SELECT u.*, cm.Descripcion AS coberturaMedica, d.Descripcion AS diagnostico, padd.Altura, padd.Peso, padd.IdPacientesInfoAdicional, padd.FechaUltimaConsulta
+    FROM usuarios AS u 
     INNER JOIN pacientesinfoadicional AS padd ON padd.IdUsuario = u.IdUsuario
     INNER JOIN diagnosticos AS d ON padd.idDiagnostico = d.idDiagnostico
     INNER JOIN coberturamedica AS cm ON cm.IdCoberturaMedica = padd.IdCoberturaMedica
-    WHERE u.IdUsuario = pacienteId;
+    WHERE u.IdUsuario = pacienteId AND Activo =1;
 END ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
@@ -491,7 +514,7 @@ BEGIN
     INNER JOIN usuarios AS u ON c.IdPaciente = u.IdUsuario
     INNER JOIN pacientesinfoadicional AS padd on padd.IdUsuario = u.IdUsuario
     INNER JOIN coberturamedica as cm ON cm.IdCoberturaMedica = padd.IdCoberturaMedica
-    WHERE c.IdMedico = medicoId AND c.estado = "aceptada"
+    WHERE c.IdMedico = medicoId AND c.estado = "aceptada" AND Activo = 1
     ORDER BY u.Apellido;
 END ;;
 DELIMITER ;
@@ -515,7 +538,7 @@ SELECT C.IdConexionMedicoPaciente, U.Nombre, U.Apellido, CM.descripcion AS "cobe
     INNER JOIN pacientesinfoadicional P ON C.IdPaciente = P.IdUsuario
     INNER JOIN usuarios U ON U.IdUsuario = P.IdUsuario
     INNER JOIN coberturamedica CM ON CM.IdCoberturaMedica = P.IdCoberturaMedica
-    WHERE C.IdMedico = medico_id AND C.estado = "pendiente" ;;
+    WHERE C.IdMedico = medico_id AND C.estado = "pendiente" AND Activo =1 ;;
 DELIMITER ;
 /*!50003 SET sql_mode              = @saved_sql_mode */ ;
 /*!50003 SET character_set_client  = @saved_cs_client */ ;
@@ -531,4 +554,4 @@ DELIMITER ;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2024-10-17 18:44:49
+-- Dump completed on 2024-10-22 19:18:07
