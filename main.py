@@ -178,8 +178,8 @@ async def crear_solicitud_medico(solicitud: SolicitudMedicoRequest, db: Session 
     matricula = solicitud.matricula
     paciente_id = solicitud.paciente_id
 
-    relacion = db.query(models.PacientesInfoAdicional).filter(models.PacientesInfoAdicional.IdPacientesInfoAdicional == paciente_id and models.PacientesInfoAdicional.Activo == 1).first()
-    paciente_id = relacion.IdUsuario
+    # relacion = db.query(models.PacientesInfoAdicional).filter(models.PacientesInfoAdicional.IdPacientesInfoAdicional == paciente_id and models.PacientesInfoAdicional.Activo == 1).first()
+    # paciente_id = relacion.IdUsuario
 
     # Buscar al médico por su matrícula
     stmt = text('CALL GetMedicoByMatricula(:matricula)')
@@ -194,7 +194,7 @@ async def crear_solicitud_medico(solicitud: SolicitudMedicoRequest, db: Session 
     conexion_existente = db.query(models.Conexiones).filter(
         models.Conexiones.IdMedico == result_list.get('IdUsuario'),
         models.Conexiones.IdPaciente == paciente_id,
-        models.Conexiones.estado == "aceptada"
+        models.Conexiones.estado == "aceptada" or models.Conexiones.estado == "pendiente"
     ).first()
 
     if conexion_existente:

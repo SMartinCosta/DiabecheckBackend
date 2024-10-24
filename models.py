@@ -15,7 +15,7 @@ class User(Base):
     FechaNacimiento = Column(String)
     RutaFoto = Column(String, unique=True)
     IdRol = Column(Integer, ForeignKey('roles.IdRol'))
-    Activo= Column(Integer)
+    Activo= Column(Integer, default=1)
    
     medicoInfoAdicional = relationship("MedicosInfoAdicional")
     pacienteInfoAdicional = relationship("PacientesInfoAdicional")
@@ -25,26 +25,26 @@ class Rol(Base):
     __tablename__= "roles"
     IdRol = Column(Integer, primary_key=True, index=True)
     Descripcion = Column(String)
-    Activo= Column(Integer)
+    Activo= Column(Integer, default=1)
    
 class CoberturaMedica(Base):
     __tablename__= "coberturamedica"
     IdCoberturaMedica = Column(Integer, primary_key=True, index=True)
     Descripcion = Column(String)
-    Activo= Column(Integer)
+    Activo= Column(Integer, default=1)
  
 class Diagnostico(Base):
     __tablename__= "diagnosticos"
     IdDiagnostico = Column(Integer, primary_key=True, index=True)
     Descripcion = Column(String)
-    Activo= Column(Integer)
+    Activo= Column(Integer, default=1)
     
 class Matricula(Base):
     __tablename__= "matriculas"
     IdMatricula = Column(Integer, primary_key=True, index=True)
     NumeroMatricula = Column(String)
     NroDocumento = Column(String)
-    Activo= Column(Integer)
+    Activo= Column(Integer, default=1)
     
 class MedicosInfoAdicional(Base):
     __tablename__="medicosinfoadicional"
@@ -52,7 +52,7 @@ class MedicosInfoAdicional(Base):
     IdUsuario = Column(Integer, ForeignKey('usuarios.IdUsuario'))
     Especialidad = Column(String)
     IdMatricula = Column(Integer, ForeignKey('matriculas.IdMatricula'))
-    Activo= Column(Integer)
+    Activo= Column(Integer, default=1)
 
     matricula = relationship("Matricula")
     
@@ -65,7 +65,7 @@ class PacientesInfoAdicional(Base):
     Peso = Column(Integer)
     Altura = Column(Integer)
     FechaUltimaConsulta = Column(DateTime)
-    Activo= Column(Integer)
+    Activo= Column(Integer, default=1)
     
     cobertura = relationship("CoberturaMedica")
     diagnostico = relationship("Diagnostico")
@@ -78,7 +78,7 @@ class Conexiones(Base):
     estado = Column(String, default="pendiente") 
     # medico = relationship("User")
     # paciente = relationship("User")
-    Activo= Column(Integer)
+    Activo= Column(Integer, default=1)
  
 class Mediciones(Base):
     __tablename__ ="mediciones"
@@ -88,7 +88,7 @@ class Mediciones(Base):
     Glucosa = Column(Integer)
     Insulina = Column(Integer)
     Carbohidratos = Column(Integer)
-    Activo= Column(Integer)
+    Activo= Column(Integer, default=1)
     
 class Archivos(Base):
     __tablename__ ="archivos"
@@ -99,11 +99,11 @@ class Archivos(Base):
     FechaPublicacion = Column(DateTime)
     IdUsuario = Column(Integer, ForeignKey('usuarios.IdUsuario'))
     tipoArchivo = Column(Integer, ForeignKey('tipoArchivo.idtipoArchivo'))
-    Activo= Column(Integer)
+    Activo= Column(Integer, default=1)
 
 class TiposDeArchivo(Base):
     __tablename__ ="tipoArchivo"
     idtipoArchivo = Column(Integer, primary_key=True, index=True)
     descripcion = Column(String)
-    Activo= Column(Integer)
+    Activo= Column(Integer, default=1)
 
