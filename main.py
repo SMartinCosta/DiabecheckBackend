@@ -194,7 +194,7 @@ async def crear_solicitud_medico(solicitud: SolicitudMedicoRequest, db: Session 
     conexion_existente = db.query(models.Conexiones).filter(
         models.Conexiones.IdMedico == result_list.get('IdUsuario'),
         models.Conexiones.IdPaciente == paciente_id,
-        models.Conexiones.estado == "aceptada" or models.Conexiones.estado == "pendiente"
+        models.Conexiones.estado.in_(["aceptada", "pendiente"])
     ).first()
 
     if conexion_existente:
@@ -316,6 +316,10 @@ async def delete_archivo(idArchivo: int, db: Session = Depends(get_db)):
     db.commit()
 
     return {"msg": "Solicitud rechazada exitosamente"}
+
+
+
+
 def activate(self, db: Session = Depends(get_db)):
     self.Roles = db.query(models.Rol)
     
