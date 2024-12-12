@@ -1,7 +1,8 @@
+from typing import Optional
 from urllib import response
 from fastapi import FastAPI, Depends, HTTPException, Query, Form, Request
 from pydantic import BaseModel
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 import models
@@ -194,7 +195,8 @@ async def crear_solicitud_medico(solicitud: SolicitudMedicoRequest, db: Session 
     conexion_existente = db.query(models.Conexiones).filter(
         models.Conexiones.IdMedico == result_list.get('IdUsuario'),
         models.Conexiones.IdPaciente == paciente_id,
-        models.Conexiones.estado.in_(["aceptada", "pendiente"])
+        models.Conexiones.estado.in_(["aceptada", "pendiente"]),
+        models.Conexiones.Activo == 1
     ).first()
 
     if conexion_existente:
@@ -301,6 +303,45 @@ async def get_tiposarchivo(db: Session = Depends(get_db)):
     tipos = result.fetchall()
     return [dict(row._mapping) for row in tipos]
 
+
+# Endpoint para filtrado de archivos
+@app.get("/archivos/{idPaciente}")
+async def get_archivos_bytipo(idPaciente: int, tipo: Optional[int] = Query(None), sort_date: Optional[str] = Query(None), db: Session = Depends(get_db)):
+    if tipo != 0:
+        stmt = text(
+            'SELECT * FROM archivos WHERE IdPaciente = :patient_id AND tipoArchivo = :tipo AND Activo = 1'
+        )
+        params = {'tipo': tipo, 'patient_id': idPaciente}
+    else:
+        stmt = text(
+            'SELECT * FROM archivos WHERE IdPaciente = :patient_id AND Activo = 1'
+        )
+        params = {'patient_id': idPaciente}
+
+    if sort_date == 'asc':
+        stmt = text(str(stmt) + ' ORDER BY FechaPublicacion ASC')
+    elif sort_date == 'desc':
+        stmt = text(str(stmt) + ' ORDER BY FechaPublicacion DESC')
+    
+    result = db.execute(stmt, params)
+    archivos = result.fetchall()
+    result_list = [dict(row._mapping) for row in archivos]
+  
+    return result_list
+
+# Endpoint para descarga de archivos
+@app.get("/archivo/{idArchivo}")
+async def get_archivo_detalles(idArchivo: int, db: Session = Depends(get_db)):
+    stmt = text('SELECT * FROM archivos WHERE IdArchivo = :archivo_id AND Activo = 1')
+    result = db.execute(stmt, {'archivo_id': idArchivo})
+    archivo = result.fetchone()
+    
+    if not archivo:
+        raise HTTPException(status_code=404, detail="Archivo no encontrado")
+    
+    return dict(archivo._mapping)
+
+
 @app.post("/archivos/borrar/{idArchivo}")
 async def delete_archivo(idArchivo: int, db: Session = Depends(get_db)):
     archivo = db.query(models.Archivos).filter(models.Archivos.IdArchivo == idArchivo and models.Archivos.Activo==1).first()
@@ -317,7 +358,11 @@ async def delete_archivo(idArchivo: int, db: Session = Depends(get_db)):
 
     return {"msg": "Solicitud rechazada exitosamente"}
 
-
+@app.get("/api/time")
+async def get_server_time():
+    # Obtén la fecha y hora actual con zona horaria UTC
+    server_time = datetime.now(timezone.utc).isoformat()
+    return {"serverTime": server_time}
 
 
 def activate(self, db: Session = Depends(get_db)):
