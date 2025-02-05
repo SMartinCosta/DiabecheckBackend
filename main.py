@@ -77,6 +77,21 @@ async def create_medicion(medicion: dict, request: Request, db: Session = Depend
     
     return db_medicion
 
+@app.delete("/mediciones/{medicion_id}/", status_code=200)
+def desactivar_medicion(medicion_id: int, db: Session = Depends(get_db)):
+    # Buscar la medición en la base de datos
+    medicion = db.query(models.Mediciones).filter(models.Mediciones.IdMedicion == medicion_id).first()
+    
+    if not medicion:
+        raise HTTPException(status_code=404, detail="Medición no encontrada")
+    
+    # Actualizar el campo 'activo' a 0 (borrado lógico)
+    medicion.Activo = 0
+    db.commit()
+
+    return {"mensaje": f"Medición {medicion_id} desactivada correctamente"}
+
+
 @app.post("/signIn/")
 async def login(email: str = Form(), db: Session = Depends(get_db)):
     db_user = db.query(models.User).filter(models.User.email == email and models.User.Active == 1).first()
@@ -212,7 +227,7 @@ async def crear_solicitud_medico(solicitud: SolicitudMedicoRequest, db: Session 
     db.commit()
     db.refresh(nueva_conexion)
 
-    return {"msg": "Solicitud enviada con éxito", "conexion": nueva_conexion}
+    return nueva_conexion
 
 
 #obtener las solicitudes de un medico
@@ -256,6 +271,20 @@ async def rechazar_solicitud(id_solicitud: int, db: Session = Depends(get_db)):
     db.commit()
 
     return {"msg": "Solicitud rechazada exitosamente"}
+
+@app.delete("/solicitudes/{solicitud_id}/", status_code=200)
+def desactivar_conexion(solicitud_id: int, db: Session = Depends(get_db)):
+    # Buscar la solicitud en la base de datos
+    solicitud = db.query(models.Conexiones).filter(models.Conexiones.IdConexionMedicoPaciente == solicitud_id).first()
+    
+    if not solicitud:
+        raise HTTPException(status_code=404, detail="Solicitud no encontrada")
+    
+    # Actualizar el campo 'activo' a 0 (borrado lógico)
+    solicitud.Activo = 0
+    db.commit()
+
+    return {"mensaje": f"Solicitud {solicitud_id} desactivada correctamente"}
 
 @app.get("/buscar_medico/{matricula}/")
 async def get_medico_for_patients(matricula: int, db: Session = Depends(get_db)):
@@ -356,7 +385,7 @@ async def delete_archivo(idArchivo: int, db: Session = Depends(get_db)):
     archivo.Activo = 0
     db.commit()
 
-    return {"msg": "Solicitud rechazada exitosamente"}
+    return {"msg": "Archivo borrado exitosamente"}
 
 @app.get("/api/time")
 async def get_server_time():
