@@ -1,74 +1,65 @@
-from pydantic import BaseModel
-from datetime import datetime, date
-from enum import Enum
-from typing import List
-from typing import Optional
+# from pydantic import BaseModel
+# from datetime import datetime, date
+# from enum import Enum
+# from typing import List
+# from typing import Optional
 
-class MedicionCreate(BaseModel):
-    Fecha: datetime
-    Glucosa: Optional[float] = None
-    Insulina: Optional[float] = None
-    Carbohidratos: Optional[float] = None
-    IdPaciente: int
+# class Config:
+#     orm_mode = True
+    
+# class MedicionCreate(BaseModel):
+#     Fecha: datetime
+#     Glucosa: Optional[float] = None
+#     Insulina: Optional[float] = None
+#     Carbohidratos: Optional[float] = None
+#     IdPatient: int
 
-class Mediciones(MedicionCreate):
-    IdMedicion: int
+# class Mediciones(MedicionCreate):
+#     IdPatientMeasure: int
 
-class Config:
-    orm_mode = True
+# class UserRole(str, Enum):
+#     MEDICO = "medico"
+#     PACIENTE = "paciente"
 
-class UserRole(str, Enum):
-    medico = "medico"
-    paciente = "paciente"
+# class UserBase(BaseModel):
+#     Email: str
+#     Role: UserRole
 
-class UserBase(BaseModel):
-    email: str
-    role: UserRole
+# class UserCreate(UserBase):
+#     password: str
 
-class UserCreate(UserBase):
-    password: str
+# class User(UserBase):
+#     id: int
 
-class User(UserBase):
-    id: int
+# class MedicoBase(BaseModel):
+#     Name: str
+#     LastName: str
 
-    class Config:
-        orm_mode = True
+# class MedicoCreate(MedicoBase):
+#     IdPatient: int
+#     idUser: int
 
-class MedicoBase(BaseModel):
-    nombre: str
-    apellido: str
+# class Medico(MedicoBase):
+#     id: int
+#     IdPatient: int
+#     idUser: int
+#     pacientes: List['Paciente'] = []
 
-class MedicoCreate(MedicoBase):
-    idPaciente: int
-    idUser: int
+# class PacienteBase(BaseModel):
+#     Name: str
+#     LastName: str
+#     documento: int
+#     BirthDate: date
+#     Weight: int
+#     Height: int
+#     Diagnosis: str
+#     Healthcare: str
 
-class Medico(MedicoBase):
-    id: int
-    idPaciente: int
-    idUser: int
-    pacientes: List['Paciente'] = []
+# class PacienteCreate(PacienteBase):
+#     IdDoctor: int
+#     idUser: int
 
-    class Config:
-        orm_mode = True
-
-class PacienteBase(BaseModel):
-    nombre: str
-    apellido: str
-    documento: int
-    fechaNacimiento: date
-    peso: int
-    altura: int
-    diagnostico: str
-    coberturaMedica: str
-
-class PacienteCreate(PacienteBase):
-    idMedico: int
-    idUser: int
-
-class Paciente(PacienteBase):
-    id: int
-    idMedico: int
-    idUser: int
-
-class Config:
-    orm_mode = True
+# class Paciente(PacienteBase):
+#     id: int
+#     IdDoctor: int
+#     idUser: int
