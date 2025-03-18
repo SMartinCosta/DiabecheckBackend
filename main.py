@@ -171,7 +171,7 @@ async def get_doctor_by_patient_id(IdPatient: int, db: Session = Depends(get_db)
     '''
     Gets a list of doctors for a given patient
     '''
-    stmt = text('CALL `diabecheckv2`.`GetMedicos`('+str(IdPatient)+')')
+    stmt = text('CALL `diabecheckv2`.`GetDoctors`('+str(IdPatient)+')')
     result = db.execute(stmt)
     medicos = result.fetchall()
     result_list = [dict(row._mapping) for row in medicos]
