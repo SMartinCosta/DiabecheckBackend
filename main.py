@@ -3,7 +3,7 @@ Contains business logic for the application
 '''
 
 from typing import Optional
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from fastapi import FastAPI, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session
 from sqlalchemy import text
@@ -11,10 +11,13 @@ import bcrypt
 import uvicorn
 import models
 import database
+import stored_procedures as sp  # Import stored procedure names
+import endpoints as ep  # Import endpoint paths
 
 models.Base.metadata.create_all(bind=database.engine)
 
 app = FastAPI()
+
 def get_db():
     '''
     Gets the database session
@@ -26,38 +29,25 @@ def get_db():
         db.close()
 
 
-def check_password(stored_password_hash: str, provided_password: str) -> bool:
-    '''
-    Checks if the provided password matches the stored password hash 
-    '''
-    return bcrypt.checkpw(provided_password.encode('utf-8'), stored_password_hash.encode('utf-8'))
-
-
-
-@app.post("/measurements/")
+@app.post(ep.CREATE_MEASUREMENT)
 async def create_measurement(measurement: dict, request: Request, db: Session = Depends(get_db)):
     '''
     Creates a new measurement record in the database
     '''
-    body = await request.json()  # Obtener datos del cuerpo de la solicitud
-    # Obtener los valores específicos del cuerpo de la solicitud
+    body = await request.json()
     glucose = body.get("Glucose")
     insulin = body.get("Insulin")
     carbohidrates = body.get("Carbohidrates")
-    measureDate = body.get("MeasureDate")
+    measureDate = body.get("MeasurementDate")
     idPatient = body.get("IdPatient")
-    # Validación: al menos uno de los campos debe estar presente
+
     if not glucose and not insulin and not carbohidrates:
-        raise HTTPException(status_code=400,
-                            detail="Debe completar al menos uno de los campos de medición")
-    measureDate = datetime.fromisoformat(measurement['MeasureDate'].replace("Z", "+00:00"))
-    if not glucose:
-        glucose=0
-    if not insulin:
-        insulin=0
-    if not carbohidrates:
-        carbohidrates=0
-    # Crear nueva medición
+        raise HTTPException(status_code=400, detail="Debe completar al menos uno de los campos de medición")
+    measureDate = datetime.fromisoformat(measurement['MeasurementDate'].replace("Z", "+00:00"))
+    glucose = glucose or 0
+    insulin = insulin or 0
+    carbohidrates = carbohidrates or 0
+
     db_measurement = models.DbPatientMeasure(
         MeasureDate=measureDate,
         Glucose=glucose,
@@ -65,43 +55,29 @@ async def create_measurement(measurement: dict, request: Request, db: Session = 
         Carbohidrates=carbohidrates,
         IdPatient=idPatient
     )
-    # Guardar en la base de datos
     db.add(db_measurement)
     db.commit()
     db.refresh(db_measurement)
     return db_measurement
 
-@app.delete("/delete_measurement/{idPatientMeasurement}/", status_code=200)
+
+@app.delete(ep.DELETE_MEASUREMENT, status_code=200)
 def delete_measurement(idPatientMeasurement: int, db: Session = Depends(get_db)):
     '''
     Logically eliminates a measurement record from the database
     '''
-    # Buscar la medición en la base de datos
     patientMeasurement = db.query(models.DbPatientMeasure).filter(models.DbPatientMeasure.IdPatientMeasure == idPatientMeasurement).first()
     if not patientMeasurement:
         raise HTTPException(status_code=404, detail="Medición no encontrada")
-    # Actualizar el campo 'Active' a 0 (borrado lógico)
     patientMeasurement.Active = 0
     db.commit()
     return {"mensaje": f"Medición {idPatientMeasurement} desactivada correctamente"}
 
-# @app.post("/signIn/")
-# async def login(Email: str = Form(), db: Session = Depends(get_db)):
-#     '''
-#     Logs in a user
-#     '''
-#     db_user = db.query(models.DbUser).filter(models.DbUser.Email == Email and models.DbUser.Active == 1).first()
-#     if db_user.Role == 'medico':
-#         medico = db.query(models.Medico).filter(models.Medico.idUser == db_user.id).first()
-#         if not medico:
-#             raise HTTPException(status_code=404, detail="Medico not found")
-#         return {"token": "your_jwt_token", "Role": db_user.Role, "medico_id": medico.id}
-#     return {"token": "your_jwt_token", "Role": db_user.Role}
 
-@app.get("/user_role/")
+@app.get(ep.USER_ROLE)
 async def get_user_role(
-    email: str = Query(None),  # Email ahora es opcional
-    idUser: int = Query(None),  # IdUser también es opcional
+    email: str = Query(None),
+    idUser: int = Query(None),
     db: Session = Depends(get_db)):
     '''
     Gets User Role by Email or IdUser
@@ -118,13 +94,14 @@ async def get_user_role(
     Role = {"IdUser": user.IdUser, "Role": user.Role.Description}
     return Role
 
-@app.get("/patients_list/{idDoctor}/")
+
+@app.get(ep.PATIENTS_LIST)
 async def get_patients_list_by_doctor(idDoctor: int, search_query: str = "", db: Session = Depends(get_db)):
     '''
     Gets a list of patients for a given doctor
     '''
-    stmt = text('CALL `diabecheckv2`.`GetPatientsByDoctor`('+str(idDoctor)+')')
-    result = db.execute(stmt)
+    stmt = text(f'CALL `{sp.GET_PATIENTS_BY_DOCTOR}`(:idDoctor)')
+    result = db.execute(stmt, {"idDoctor": idDoctor})
     patients = result.fetchall()
     if not patients:
         raise HTTPException(status_code=404, detail="No patients found for this medico")
@@ -134,63 +111,58 @@ async def get_patients_list_by_doctor(idDoctor: int, search_query: str = "", db:
                        or search_query.lower() in str(patient['DocumentNumber'])]
     return result_list
 
-# Endpoint para obtener detalles de un paciente por ID
-@app.get("/patient_details/{idPatient}/")
-async def get_patients_list(idPatient: int, db: Session = Depends(get_db)):
+
+@app.get(ep.PATIENT_DETAILS)
+async def get_patient_details(idPatient: int, db: Session = Depends(get_db)):
     '''
     Gets a patient's details by ID
     '''
     try:
-        # Llamar al procedure almacenado en la base de datos
-        stmt = text('CALL GetPatientDetails(:idPatient)')
+        stmt = text(f'CALL {sp.GET_PATIENT_DETAILS}(:idPatient)')
         result = db.execute(stmt, {"idPatient": idPatient})
         patient_details = result.fetchone()
-        # Verificar si se encontraron datos
         if not patient_details:
             raise HTTPException(status_code=404, detail="Paciente no encontrado")
-        # Convertir los resultados en un diccionario
-        patient_dict = dict(patient_details._mapping)
-        return patient_dict
+        return dict(patient_details._mapping)
     except Exception as e:
-        raise HTTPException(status_code=500,
-                            detail=f'Error al obtener los detalles del paciente: {str(e)}') from e
+        raise HTTPException(status_code=500, detail=f'Error al obtener los detalles del paciente: {str(e)}') from e
 
-@app.get("/patient_measurements/{idPatient}/")
+
+@app.get(ep.PATIENT_MEASUREMENTS)
 async def get_patient_measurements(idPatient: int, month: int, year: int, db: Session = Depends(get_db)):
     '''
     Gets a patient's measurements for a given month and year
     '''
-    stmt = text('SELECT * FROM patientmeasure WHERE MONTH(MeasureDate) = :month AND YEAR(MeasureDate) = :year AND IdPatient = :idPatient AND Active = 1 ORDER BY MeasureDate ASC')
-    #Cambiar el query para que llame al procedure almacenado
+    stmt = text(sp.SELECT_PATIENT_MEASUREMENTS)
     result = db.execute(stmt, {'month': month, 'year': year, 'idPatient': idPatient})
     measurements = result.fetchall()
     return [dict(row._mapping) for row in measurements]
 
-@app.get("/doctor_list/{idPatient}/")
-async def get_doctor_by_id_patient(IdPatient: int, db: Session = Depends(get_db)):
+
+@app.get(ep.DOCTOR_LIST)
+async def get_doctor_by_id_patient(idPatient: int, db: Session = Depends(get_db)):
     '''
     Gets a list of doctors for a given patient
     '''
-    stmt = text('CALL `diabecheckv2`.`GetDoctors`('+str(IdPatient)+')')
-    result = db.execute(stmt)
+    stmt = text(f'CALL {sp.GET_DOCTORS}(:idPatient)')
+    result = db.execute(stmt, {"idPatient": idPatient})
     doctors = result.fetchall()
-    result_list = [dict(row._mapping) for row in doctors]
-    return result_list
+    return [dict(row._mapping) for row in doctors]
 
-@app.post("/doctor_connection_request/")
+
+@app.post(ep.DOCTOR_CONNECTION_REQUEST)
 async def create_connection_request(request: models.DoctorConnectionRequest, db: Session = Depends(get_db)):
     '''
     Creates a new connection request between a patient and a doctor
     '''
     DoctorLicense = request.DoctorLicense
     IdPatient = request.IdPatient
-    # Buscar al médico por su matrícula
     stmt = text('CALL GetDoctorByDoctorLicense(:DoctorLicense)')
     result = db.execute(stmt, {"DoctorLicense": DoctorLicense})
     doctor = result.fetchone()
-    result_list = dict(doctor._mapping)
     if not doctor:
         raise HTTPException(status_code=404, detail="Médico no encontrado")
+    result_list = dict(doctor._mapping)
     # Verificar si ya existe una solicitud o conexión
     existent_connection = db.query(models.DbDoctorPatientConnection).filter(
         models.DbDoctorPatientConnection.IdDoctor == result_list.get('IdUser'),
@@ -212,19 +184,20 @@ async def create_connection_request(request: models.DoctorConnectionRequest, db:
     db.refresh(new_connection)
     return new_connection
 
-#obtener las solicitudes de un medico
-@app.get("/doctor_connection_requests/{idDoctor}/")
+
+@app.get(ep.DOCTOR_CONNECTION_REQUESTS)
 async def get_requests(idDoctor: int, db: Session = Depends(get_db)):
     '''
     Gets a list of connection requests for a given doctor
     '''
-    stmt = text('CALL `diabecheckv2`.`GetConnectionRequestsByDoctor`(:idDoctor)')
+    stmt = text(f'CALL {sp.GET_CONNECTION_REQUESTS_BY_DOCTOR}(:idDoctor)')
     result = db.execute(stmt, {"idDoctor": idDoctor})
     requests = result.fetchall()
     result_list = [dict(row._mapping) for row in requests]
     return result_list
 
-@app.post("/accept_doctor_connection_request/{idDoctorPatientConnection}/")
+
+@app.post(ep.ACCEPT_DOCTOR_CONNECTION_REQUEST)
 async def accept_request(idDoctorPatientConnection: int, db: Session = Depends(get_db)):
     '''
     Accepts a connection request
@@ -238,7 +211,8 @@ async def accept_request(idDoctorPatientConnection: int, db: Session = Depends(g
     db.commit()
     return {"msg": "Solicitud aceptada exitosamente"}
 
-@app.post("/reject_doctor_connection_request/{idDoctorPatientConnection}/")
+
+@app.post(ep.REJECT_DOCTOR_CONNECTION_REQUEST)
 async def reject_connection(idDoctorPatientConnection: int, db: Session = Depends(get_db)):
     '''
     Rejects a connection request
@@ -253,7 +227,8 @@ async def reject_connection(idDoctorPatientConnection: int, db: Session = Depend
     db.commit()
     return {"msg": "Solicitud rechazada exitosamente"}
 
-@app.delete("/doctor_connection_requests/{idDoctorPatientConnection}/", status_code=200)
+
+@app.delete(ep.DELETE_DOCTOR_CONNECTION_REQUEST, status_code=200)
 def delete_connection(idDoctorPatientConnection: int, db: Session = Depends(get_db)):
     '''
     Eliminates a connection
@@ -267,12 +242,13 @@ def delete_connection(idDoctorPatientConnection: int, db: Session = Depends(get_
     db.commit()
     return {"mensaje": f"Solicitud {idDoctorPatientConnection} desactivada correctamente"}
 
-@app.get("/search_doctor/{DoctorLicense}/")
+
+@app.get(ep.SEARCH_DOCTOR)
 async def get_doctor_by_license(DoctorLicense: int, db: Session = Depends(get_db)):
     '''
     Gets doctor by a DoctorLicense
     '''
-    stmt = text('CALL GetDoctorByDoctorLicense(:DoctorLicense)')
+    stmt = text(f'CALL {sp.GET_DOCTOR_BY_LICENSE}(:DoctorLicense)')
     result = db.execute(stmt, {"DoctorLicense": DoctorLicense})
     doctors = result.fetchall()
     if not doctors:
@@ -280,19 +256,20 @@ async def get_doctor_by_license(DoctorLicense: int, db: Session = Depends(get_db
     result_list = [dict(row._mapping) for row in doctors]
     return result_list
 
-@app.get("/patient_files/{idPatient}/")
+
+@app.get(ep.PATIENT_FILES)
 async def get_patient_files(idPatient: int, db: Session = Depends(get_db)):
     '''
     Gets files for a given patient
     '''
-    stmt = text('CALL `diabecheckv2`.`GetPatientFiles`('+str(idPatient)+')')
-    result = db.execute(stmt)
+    stmt = text(f'CALL {sp.GET_PATIENT_FILES}(:idPatient)')
+    result = db.execute(stmt, {"idPatient": idPatient})
     files = result.fetchall()
     result_list = [dict(row._mapping) for row in files]
     return result_list
 
 
-@app.post("/files/")
+@app.post(ep.CREATE_FILE)
 async def create_file(file: models.FileBase, db: Session = Depends(get_db)):
     '''
     Uploads a new file to the database
@@ -310,85 +287,51 @@ async def create_file(file: models.FileBase, db: Session = Depends(get_db)):
     db.refresh(new_file)
     return {"message": "Archivo registrado exitosamente", "file": new_file}
 
-@app.get("/fileTypes/")
+
+@app.get(ep.FILE_TYPES)
 async def get_file_types(db: Session = Depends(get_db)):
     '''
     Gets a list of available file types
     '''
-    stmt = text('SELECT * FROM FileType WHERE Active =1')
+    stmt = text(sp.SELECT_FILE_TYPES)
     result = db.execute(stmt)
     types = result.fetchall()
     return [dict(row._mapping) for row in types]
 
-# Endpoint para filtrado de archivos
-@app.get("/patient_files/{idPatient}/")
-async def get_patient_files(idPatient: int, fileType: Optional[int] = Query(None), sort_date: Optional[str] = Query(None), db: Session = Depends(get_db)):
-    '''
-    Gets a list of files for a given patient, optionally filtered by file type
-    '''
-    if fileType != 0:
-        stmt = text(
-            'SELECT * FROM archivos WHERE IdPatient = :idPatient AND FileType = :fileType AND Active = 1'
-        )
-        params = {'fileType': fileType, 'idPatient': idPatient}
-    else:
-        stmt = text(
-            'SELECT * FROM archivos WHERE IdPatient = :idPatient AND Active = 1'
-        )
-        params = {'idPatient': idPatient}
-    #Cambiar el query para que llame al procedure almacenado
-    if sort_date == 'asc':
-        stmt = text(str(stmt) + ' ORDER BY PublishDate ASC')
-    elif sort_date == 'desc':
-        stmt = text(str(stmt) + ' ORDER BY PublishDate DESC')
-    result = db.execute(stmt, params)
-    files = result.fetchall()
-    result_list = [dict(row._mapping) for row in files]
-    return result_list
 
-# Endpoint para descarga de archivos
-@app.get("/file/{idFile}/")
+@app.get(ep.GET_FILE)
 async def get_file(idFile: int, db: Session = Depends(get_db)):
     '''
     Gets details for a specific file
     '''
-    stmt = text('SELECT * FROM File WHERE IdFile = :idFile AND Active = 1')
+    stmt = text(sp.SELECT_FILE_BY_ID)
     result = db.execute(stmt, {'idFile': idFile})
     file = result.fetchone()
     if not file:
         raise HTTPException(status_code=404, detail="Archivo no encontrado")
     return dict(file._mapping)
 
-@app.post("/delete_file/{idFile}/")
+
+@app.post(ep.DELETE_FILE)
 async def delete_file(idFile: int, db: Session = Depends(get_db)):
     '''
     Deletes a file from DB
     '''
-    file = db.query(models.DbFile).filter(models.DbFile.IdArchivo == idFile and models.DbFile.Active==1).first()
-    if not file:
-        raise HTTPException(status_code=404, detail="Archivo no encontrada")
-    if file.Active != 1:
-        raise HTTPException(status_code=400, detail="El archivo ya fue eliminado")
-    # Actualizar Status a "rechazada"
-    file.Active = 0
+    stmt = text(sp.DELETE_FILE_LOGICAL)
+    result = db.execute(stmt, {'idFile': idFile})
     db.commit()
     return {"msg": "Archivo borrado exitosamente"}
 
-@app.get("/api/time")
+
+@app.get(ep.SERVER_TIME)
 async def get_server_time():
     '''
     Gets server time
     '''
     # Obtén la fecha y hora actual con zona horaria UTC
-    server_time = datetime.now(timezone.utc).isoformat()
+    server_time = datetime.now(timezone(timedelta(hours=-3))).isoformat()
     return {"serverTime": server_time}
 
-def activate(self, db: Session = Depends(get_db)):
-    '''
-    Activate the server
-    '''
-    self.Roles = db.query(models.DbRole)
-    
+
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
-    activate(get_db())
