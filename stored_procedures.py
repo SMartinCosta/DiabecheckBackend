@@ -38,5 +38,5 @@ SELECT_FILE_BY_ID = '''
 DELETE_FILE_LOGICAL = '''
     UPDATE File 
     SET Active = 0 
-    WHERE IdArchivo = :idFile
+    WHERE IdFile = :idFile
 '''
