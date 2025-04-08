@@ -2,12 +2,10 @@
 Contains business logic for the application
 '''
 
-from typing import Optional
 from datetime import datetime, timedelta, timezone
 from fastapi import FastAPI, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session
 from sqlalchemy import text
-import bcrypt
 import uvicorn
 import models
 import database
@@ -18,7 +16,7 @@ models.Base.metadata.create_all(bind=database.engine)
 
 app = FastAPI()
 
-def get_db():
+def GetDb():
     '''
     Gets the database session
     '''
@@ -30,7 +28,7 @@ def get_db():
 
 
 @app.post(ep.CREATE_MEASUREMENT)
-async def create_measurement(measurement: dict, request: Request, db: Session = Depends(get_db)):
+async def CreateMeasurement(measurement: dict, request: Request, db: Session = Depends(GetDb)):
     '''
     Creates a new measurement record in the database
     '''
@@ -42,31 +40,36 @@ async def create_measurement(measurement: dict, request: Request, db: Session = 
     idPatient = body.get("IdPatient")
 
     if not glucose and not insulin and not carbohidrates:
-        raise HTTPException(status_code=400, detail="Debe completar al menos uno de los campos de medición")
+        raise HTTPException(status_code=400,
+                            detail="Debe completar al menos uno de los campos de medición")
     measureDate = datetime.fromisoformat(measurement['MeasurementDate'].replace("Z", "+00:00"))
     glucose = glucose or 0
     insulin = insulin or 0
     carbohidrates = carbohidrates or 0
 
-    db_measurement = models.DbPatientMeasure(
+    dbMeasurement = models.DbPatientMeasure(
         MeasureDate=measureDate,
         Glucose=glucose,
         Insulin=insulin,
         Carbohidrates=carbohidrates,
         IdPatient=idPatient
     )
-    db.add(db_measurement)
+    db.add(dbMeasurement)
     db.commit()
-    db.refresh(db_measurement)
-    return db_measurement
+    db.refresh(dbMeasurement)
+    return dbMeasurement
 
 
 @app.delete(ep.DELETE_MEASUREMENT, status_code=200)
-def delete_measurement(idPatientMeasurement: int, db: Session = Depends(get_db)):
+def DeleteMeasurement(idPatientMeasurement: int, db: Session = Depends(GetDb)):
     '''
     Logically eliminates a measurement record from the database
     '''
-    patientMeasurement = db.query(models.DbPatientMeasure).filter(models.DbPatientMeasure.IdPatientMeasure == idPatientMeasurement).first()
+    patientMeasurement = (
+        db.query(models.DbPatientMeasure)
+        .filter(models.DbPatientMeasure.IdPatientMeasure == idPatientMeasurement)
+        .first()
+    )
     if not patientMeasurement:
         raise HTTPException(status_code=404, detail="Medición no encontrada")
     patientMeasurement.Active = 0
@@ -75,28 +78,39 @@ def delete_measurement(idPatientMeasurement: int, db: Session = Depends(get_db))
 
 
 @app.get(ep.USER_ROLE)
-async def get_user_role(
+async def GetUserRole(
     email: str = Query(None),
     idUser: int = Query(None),
-    db: Session = Depends(get_db)):
+    db: Session = Depends(GetDb)):
     '''
     Gets User Role by Email or IdUser
     '''
-    user_query_patient = db.query(models.DbUser)
+    userQueryPatient = db.query(models.DbUser)
     if email:
-        user = db.query(models.DbUser).filter(models.DbUser.Email == email and models.DbUser.Active == 1).first()
+        user = (
+            db.query(models.DbUser)
+            .filter(models.DbUser.Email == email and models.DbUser.Active == 1)
+            .first()
+        )
     elif idUser:
-        user = user_query_patient.filter(models.DbUser.IdUser == idUser and models.DbUser.Active == 1).first()
+        user = (
+            userQueryPatient
+            .filter(models.DbUser.IdUser == idUser and models.DbUser.Active == 1)
+            .first()
+        )
     else:
         raise HTTPException(status_code=400, detail="Debe proporcionar Email o IdUser")
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
-    Role = {"IdUser": user.IdUser, "Role": user.Role.Description}
-    return Role
+    role = {"IdUser": user.IdUser, "Role": user.Role.Description}
+    return role
 
 
 @app.get(ep.PATIENTS_LIST)
-async def get_patients_list_by_doctor(idDoctor: int, search_query: str = "", db: Session = Depends(get_db)):
+async def GetPatientsListByDoctor(
+    idDoctor: int,
+    searchQuery: str = "",
+    db: Session = Depends(GetDb)):
     '''
     Gets a list of patients for a given doctor
     '''
@@ -105,104 +119,118 @@ async def get_patients_list_by_doctor(idDoctor: int, search_query: str = "", db:
     patients = result.fetchall()
     if not patients:
         raise HTTPException(status_code=404, detail="No patients found for this medico")
-    result_list = [dict(row._mapping) for row in patients]
-    if search_query:
-        result_list = [patient for patient in result_list if search_query.lower() in patient['LastName'].lower()
-                       or search_query.lower() in str(patient['DocumentNumber'])]
-    return result_list
+    resultList = [row._asdict() for row in patients]
+    if searchQuery:
+        resultList = [patient for patient in resultList if searchQuery.lower()
+                       in patient['LastName'].lower()
+                       or searchQuery.lower() in str(patient['DocumentNumber'])]
+    return resultList
 
 
 @app.get(ep.PATIENT_DETAILS)
-async def get_patient_details(idPatient: int, db: Session = Depends(get_db)):
+async def GetPatientDetails(idPatient: int, db: Session = Depends(GetDb)):
     '''
     Gets a patient's details by ID
     '''
     try:
         stmt = text(f'CALL {sp.GET_PATIENT_DETAILS}(:idPatient)')
         result = db.execute(stmt, {"idPatient": idPatient})
-        patient_details = result.fetchone()
-        if not patient_details:
+        patientDetails = result.fetchone()
+        if not patientDetails:
             raise HTTPException(status_code=404, detail="Paciente no encontrado")
-        return dict(patient_details._mapping)
+        return patientDetails._asdict()
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f'Error al obtener los detalles del paciente: {str(e)}') from e
+        raise HTTPException(status_code=500,
+                            detail=f'Error al obtener los detalles del paciente: {str(e)}') from e
 
 
 @app.get(ep.PATIENT_MEASUREMENTS)
-async def get_patient_measurements(idPatient: int, month: int, year: int, db: Session = Depends(get_db)):
+async def GetPatientMeasurements(
+    idPatient: int,
+    month: int,
+    year: int,
+    db: Session = Depends(GetDb)):
     '''
     Gets a patient's measurements for a given month and year
     '''
     stmt = text(sp.SELECT_PATIENT_MEASUREMENTS)
     result = db.execute(stmt, {'month': month, 'year': year, 'idPatient': idPatient})
     measurements = result.fetchall()
-    return [dict(row._mapping) for row in measurements]
+    return [row._asdict() for row in measurements]
 
 
 @app.get(ep.DOCTOR_LIST)
-async def get_doctor_by_id_patient(idPatient: int, db: Session = Depends(get_db)):
+async def GetDoctorByIdPatient(idPatient: int, db: Session = Depends(GetDb)):
     '''
     Gets a list of doctors for a given patient
     '''
     stmt = text(f'CALL {sp.GET_DOCTORS}(:idPatient)')
     result = db.execute(stmt, {"idPatient": idPatient})
     doctors = result.fetchall()
-    return [dict(row._mapping) for row in doctors]
+    return [row._asdict() for row in doctors]
 
 
 @app.post(ep.DOCTOR_CONNECTION_REQUEST)
-async def create_connection_request(request: models.DoctorConnectionRequest, db: Session = Depends(get_db)):
+async def CreateConnectionRequest(
+    request: models.DoctorConnectionRequest,
+    db: Session = Depends(GetDb)):
     '''
     Creates a new connection request between a patient and a doctor
     '''
-    DoctorLicense = request.DoctorLicense
-    IdPatient = request.IdPatient
+    doctorLicense = request.DoctorLicense
+    idPatient = request.IdPatient
     stmt = text('CALL GetDoctorByDoctorLicense(:DoctorLicense)')
-    result = db.execute(stmt, {"DoctorLicense": DoctorLicense})
+    result = db.execute(stmt, {"DoctorLicense": doctorLicense})
     doctor = result.fetchone()
     if not doctor:
         raise HTTPException(status_code=404, detail="Médico no encontrado")
-    result_list = dict(doctor._mapping)
+    resultList = doctor._asdict()
     # Verificar si ya existe una solicitud o conexión
-    existent_connection = db.query(models.DbDoctorPatientConnection).filter(
-        models.DbDoctorPatientConnection.IdDoctor == result_list.get('IdUser'),
-        models.DbDoctorPatientConnection.IdPatient == IdPatient,
+    existentConnection = db.query(models.DbDoctorPatientConnection).filter(
+        models.DbDoctorPatientConnection.IdDoctor == resultList.get('IdUser'),
+        models.DbDoctorPatientConnection.IdPatient == idPatient,
         models.DbDoctorPatientConnection.Status.in_(["aceptada", "pendiente"]),
         models.DbDoctorPatientConnection.Active == 1
     ).first()
-    if existent_connection:
+    if existentConnection:
         raise HTTPException(status_code=404,
                             detail="Ya existe una solicitud o conexión con este médico")
     # Crear la solicitud pendiente
-    new_connection = models.DbDoctorPatientConnection(
-        IdDoctor=result_list.get('IdUser'),
-        IdPatient=IdPatient,
+    newConnection = models.DbDoctorPatientConnection(
+        IdDoctor=resultList.get('IdUser'),
+        IdPatient=idPatient,
         Status="pendiente"
     )
-    db.add(new_connection)
+    db.add(newConnection)
     db.commit()
-    db.refresh(new_connection)
-    return new_connection
+    db.refresh(newConnection)
+    return newConnection
 
 
 @app.get(ep.DOCTOR_CONNECTION_REQUESTS)
-async def get_requests(idDoctor: int, db: Session = Depends(get_db)):
+async def GetRequests(idDoctor: int, db: Session = Depends(GetDb)):
     '''
     Gets a list of connection requests for a given doctor
     '''
     stmt = text(f'CALL {sp.GET_CONNECTION_REQUESTS_BY_DOCTOR}(:idDoctor)')
     result = db.execute(stmt, {"idDoctor": idDoctor})
     requests = result.fetchall()
-    result_list = [dict(row._mapping) for row in requests]
-    return result_list
+    resultList = [row._asdict() for row in requests]
+    return resultList
 
 
 @app.post(ep.ACCEPT_DOCTOR_CONNECTION_REQUEST)
-async def accept_request(idDoctorPatientConnection: int, db: Session = Depends(get_db)):
+async def AcceptRequest(idDoctorPatientConnection: int, db: Session = Depends(GetDb)):
     '''
     Accepts a connection request
     '''
-    connenction = db.query(models.DbDoctorPatientConnection).filter(models.DbDoctorPatientConnection.IdDoctorPatientConnection == idDoctorPatientConnection and models.DbDoctorPatientConnection.Active == 1).first()
+    connenction = (
+        db.query(models.DbDoctorPatientConnection)
+        .filter(models.DbDoctorPatientConnection.IdDoctorPatientConnection
+                == idDoctorPatientConnection
+                and models.DbDoctorPatientConnection.Active == 1)
+        .first()
+    )
     if not connenction:
         raise HTTPException(status_code=404, detail="Solicitud no encontrada")
     if connenction.Status != "pendiente":
@@ -213,11 +241,17 @@ async def accept_request(idDoctorPatientConnection: int, db: Session = Depends(g
 
 
 @app.post(ep.REJECT_DOCTOR_CONNECTION_REQUEST)
-async def reject_connection(idDoctorPatientConnection: int, db: Session = Depends(get_db)):
+async def RejectConnection(idDoctorPatientConnection: int, db: Session = Depends(GetDb)):
     '''
     Rejects a connection request
     '''
-    request = db.query(models.DbDoctorPatientConnection).filter(models.DbDoctorPatientConnection.IdDoctorPatientConnection == idDoctorPatientConnection and models.DbDoctorPatientConnection.Active == 1).first()
+    request = (
+        db.query(models.DbDoctorPatientConnection)
+        .filter(models.DbDoctorPatientConnection.IdDoctorPatientConnection
+                == idDoctorPatientConnection
+                and models.DbDoctorPatientConnection.Active == 1)
+        .first()
+    )
     if not request:
         raise HTTPException(status_code=404, detail="Solicitud no encontrada")
     if request.Status != "pendiente":
@@ -229,12 +263,17 @@ async def reject_connection(idDoctorPatientConnection: int, db: Session = Depend
 
 
 @app.delete(ep.DELETE_DOCTOR_CONNECTION_REQUEST, status_code=200)
-def delete_connection(idDoctorPatientConnection: int, db: Session = Depends(get_db)):
+def DeleteConnection(idDoctorPatientConnection: int, db: Session = Depends(GetDb)):
     '''
     Eliminates a connection
     '''
     # Buscar la solicitud en la base de datos
-    request = db.query(models.DbDoctorPatientConnection).filter(models.DbDoctorPatientConnection.IdDoctorPatientConnection == idDoctorPatientConnection).first()
+    request = (
+        db.query(models.DbDoctorPatientConnection)
+        .filter(models.DbDoctorPatientConnection.IdDoctorPatientConnection
+                == idDoctorPatientConnection)
+        .first()
+    )
     if not request:
         raise HTTPException(status_code=404, detail="Solicitud no encontrada")
     # Actualizar el campo 'Active' a 0 (borrado lógico)
@@ -244,37 +283,37 @@ def delete_connection(idDoctorPatientConnection: int, db: Session = Depends(get_
 
 
 @app.get(ep.SEARCH_DOCTOR)
-async def get_doctor_by_license(DoctorLicense: int, db: Session = Depends(get_db)):
+async def GetDoctorByLicense(doctorLicense: int, db: Session = Depends(GetDb)):
     '''
     Gets doctor by a DoctorLicense
     '''
     stmt = text(f'CALL {sp.GET_DOCTOR_BY_LICENSE}(:DoctorLicense)')
-    result = db.execute(stmt, {"DoctorLicense": DoctorLicense})
+    result = db.execute(stmt, {"DoctorLicense": doctorLicense})
     doctors = result.fetchall()
     if not doctors:
         raise HTTPException(status_code=404, detail="No medico found for this patient")
-    result_list = [dict(row._mapping) for row in doctors]
-    return result_list
+    resultList = [row._asdict() for row in doctors]
+    return resultList
 
 
 @app.get(ep.PATIENT_FILES)
-async def get_patient_files(idPatient: int, db: Session = Depends(get_db)):
+async def GetPatientFiles(idPatient: int, db: Session = Depends(GetDb)):
     '''
     Gets files for a given patient
     '''
     stmt = text(f'CALL {sp.GET_PATIENT_FILES}(:idPatient)')
     result = db.execute(stmt, {"idPatient": idPatient})
     files = result.fetchall()
-    result_list = [dict(row._mapping) for row in files]
-    return result_list
+    resultList = [row._asdict() for row in files]
+    return resultList
 
 
 @app.post(ep.CREATE_FILE)
-async def create_file(file: models.FileBase, db: Session = Depends(get_db)):
+async def CreateFile(file: models.FileBase, db: Session = Depends(GetDb)):
     '''
     Uploads a new file to the database
     '''
-    new_file = models.DbFile(
+    newFile = models.DbFile(
         IdPatient=file.IdPatient,
         Name=file.Name,
         FilePath=file.FilePath,
@@ -282,25 +321,25 @@ async def create_file(file: models.FileBase, db: Session = Depends(get_db)):
         IdUser=file.IdUser,
         FileType=file.IdFileType
     )
-    db.add(new_file)
+    db.add(newFile)
     db.commit()
-    db.refresh(new_file)
-    return {"message": "Archivo registrado exitosamente", "file": new_file}
+    db.refresh(newFile)
+    return {"message": "Archivo registrado exitosamente", "file": newFile}
 
 
 @app.get(ep.FILE_TYPES)
-async def get_file_types(db: Session = Depends(get_db)):
+async def GetFileTypes(db: Session = Depends(GetDb)):
     '''
     Gets a list of available file types
     '''
     stmt = text(sp.SELECT_FILE_TYPES)
     result = db.execute(stmt)
     types = result.fetchall()
-    return [dict(row._mapping) for row in types]
+    return [row._asdict() for row in types]
 
 
 @app.get(ep.GET_FILE)
-async def get_file(idFile: int, db: Session = Depends(get_db)):
+async def GetFile(idFile: int, db: Session = Depends(GetDb)):
     '''
     Gets details for a specific file
     '''
@@ -309,28 +348,28 @@ async def get_file(idFile: int, db: Session = Depends(get_db)):
     file = result.fetchone()
     if not file:
         raise HTTPException(status_code=404, detail="Archivo no encontrado")
-    return dict(file._mapping)
+    return file._asdict()
 
 
 @app.post(ep.DELETE_FILE)
-async def delete_file(idFile: int, db: Session = Depends(get_db)):
+async def DeleteFile(idFile: int, db: Session = Depends(GetDb)):
     '''
     Deletes a file from DB
     '''
     stmt = text(sp.DELETE_FILE_LOGICAL)
-    result = db.execute(stmt, {'idFile': idFile})
+    _ = db.execute(stmt, {'idFile': idFile})
     db.commit()
     return {"msg": "Archivo borrado exitosamente"}
 
 
 @app.get(ep.SERVER_TIME)
-async def get_server_time():
+async def GetServerTime():
     '''
     Gets server time
     '''
     # Obtén la fecha y hora actual con zona horaria UTC
-    server_time = datetime.now(timezone(timedelta(hours=-3))).isoformat()
-    return {"serverTime": server_time}
+    serverTime = datetime.now(timezone(timedelta(hours=-3))).isoformat()
+    return {"serverTime": serverTime}
 
 
 if __name__ == "__main__":

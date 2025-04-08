@@ -1,9 +1,9 @@
 '''
 Contains Models that program can get from database
 '''
-from sqlalchemy import Column, Integer, String, DateTime, Date, ForeignKey
-from sqlalchemy.orm import relationship
 from datetime import datetime
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
+from sqlalchemy.orm import relationship
 from pydantic import BaseModel
 from database import Base
 
@@ -128,8 +128,6 @@ class DbFileType(Base):
     IdFileType = Column(Integer, primary_key=True, index=True)
     Description = Column(String)
     Active= Column(Integer, default=1)
-    
-
 class DoctorConnectionRequest(BaseModel):
     '''
     Request model

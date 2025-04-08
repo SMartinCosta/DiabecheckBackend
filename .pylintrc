@@ -1,0 +1,16 @@
+[MAIN]
+#Regla 1
+class-attribute-naming-style=PascalCase
+class-attribute-rgx=^(__tablename__|[A-Z][a-zA-Z0-9]*)$
+#Regla 2
+class-naming-style=PascalCase
+#Regla 3
+variable-naming-style=camelCase
+#Regla 4
+argument-naming-style=camelCase
+#Regla 5
+function-naming-style=PascalCase
+#Regla 6
+method-naming-style=PascalCase
+#Regla 7
+disable = too-few-public-methods

@@ -16,8 +16,8 @@ DOCTOR_CONNECTION_REQUEST = "/doctor_connection_request/"
 DOCTOR_CONNECTION_REQUESTS = "/doctor_connection_requests/{idDoctor}/"
 ACCEPT_DOCTOR_CONNECTION_REQUEST = "/accept_doctor_connection_request/{idDoctorPatientConnection}/"
 REJECT_DOCTOR_CONNECTION_REQUEST = "/reject_doctor_connection_request/{idDoctorPatientConnection}/"
-DELETE_DOCTOR_CONNECTION_REQUEST = "/delete_doctor_connection_request/{idDoctorPatientConnection}/"  # Added this line
-SEARCH_DOCTOR = "/search_doctor/{DoctorLicense}/"
+DELETE_DOCTOR_CONNECTION_REQUEST = "/delete_doctor_connection_request/{idDoctorPatientConnection}/"
+SEARCH_DOCTOR = "/search_doctor/{doctorLicense}/"
 
 # Measurement-related endpoints
 CREATE_MEASUREMENT = "/measurements/"
